@@ -1,0 +1,55 @@
+# This workflow will run automatic builds for checkins to feature branches
+# It runs automtatically for branches that are not main, or release-* branches (including prerelease)
+
+name: Keyfactor - Build .NET Solution
+
+on:
+  push: # build on push
+  # don't run on push to main or release branches
+    branches-ignore:
+      - 'main'
+      - 'release-**'
+  pull_request: # also build on PRs to pre-release
+    branches:
+      - 'release-[0-9]+.[0-9]+-pre'
+  workflow_dispatch: # allow manual runs
+      
+jobs:
+  build: 
+    runs-on: windows-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Setup Envrionment
+        id: setup_env
+        run: |
+            echo "Setup Envrionment Variables for Workflow"
+            echo "Working Path: ${Env:GITHUB_WORKSPACE}"
+            $slnPath = (Get-ChildItem -Include *.sln -File -Recurse).fullname
+            echo "Solution File Path: ${slnPath}"
+            echo "SOLUTION_PATH=${slnPath}" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+        
+      - uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel      
+            #dotnet-version: 
+        
+      - name: Add Package Source
+        run: |
+          dotnet nuget add source https://nuget.pkg.github.com/Keyfactor/index.json -n github -u ${{ github.actor }} -p ${{ secrets.BUILD_PACKAGE_ACCESS }} --store-password-in-clear-text
+      
+      # Configures msbuild path envrionment
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v1
+      
+      # Restores Packages to Local Machine
+      - name: restore nuget packages
+        run: |
+          nuget restore ${{ env.SOLUTION_PATH  }}
+      
+      # Runs a set of commands using the runners shell
+      - name: Execute MSBuild Commands
+        run: |
+          MSBuild.exe $Env:SOLUTION_PATH -p:RestorePackagesConfig=true -p:Configuration=Release
+          
