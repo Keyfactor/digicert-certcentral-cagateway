@@ -9,9 +9,9 @@ This AnyGateway plug-in enables issuance, revocation, and synchronization of cer
 # Prerequisites
 
 ## AnyGateway Platform Minimum Version
-The Entrust AnyGateway requires the Keyfactor AnyGateway v21.5.1 or newer
+The DigiCert CertCentral AnyGateway requires the Keyfactor AnyGateway v21.5.1 or newer
 
-## Migrating to the Entrust AnyGateway plugin from a previous version of the standalone DigiCert Gateway.
+## Migrating to the DigiCert AnyGateway plugin from a previous version of the standalone DigiCert Gateway.
 
 ## Migration From 20.1.x or Earlier
 If you are upgrading from an older version of the DigiCert gateway that still used the GUI configuration wizard (20.1.x or earlier), you first have to do an upgrade to DigiCert version 21.x to migrate your database to SQL.
@@ -25,7 +25,7 @@ After doing that upgrade, follow the below steps to migrate from 21.x to the cur
 * Follow the instructions to install the AnyGateway product and update the CAProxyServer.config file, but do not do any further configuration yet
 * Run the following PowerShell command:
     reg import C:\DigiCertGatewayBackup.reg
-* Continue with the gateway configuration, but do NOT run the Set-KeyfactorGatewayEncryptionCert or the Set-KeyfactorGatewayDatabaseConnection cmdlets, as those values were the ones persisted in the registry backup.
+* Continue with the gateway configuration as described in the AnyGateway documentation, but do NOT run the Set-KeyfactorGatewayEncryptionCert or the Set-KeyfactorGatewayDatabaseConnection cmdlets, as those values were the ones persisted in the registry backup.
 
 This is a one-time process as the DigiCert gateway moves fully to the Keyfactor AnyGateway model. Future upgrades will not require this process.
 
@@ -50,7 +50,7 @@ The following sections will breakdown the required configurations for the AnyGat
 
 ## Templates
 The Template section will map the CA's products to an AD template.
-Available ProductIDs will depend on your Entrust account's inventory
+Available ProductIDs will depend on your DigiCert account's inventory
 The LifetimeDays parameter is optional and represents the certificate duration in days. If not provided, default is 365 days.
  ```json
   "Templates": {
@@ -138,7 +138,7 @@ This is the API key to use to connect to the DigiCert API.
 There are no specific Changes for the GatewayRegistration section. Refer to the AnyGateway Documentation for more detail.
 ```json
   "GatewayRegistration": {
-    "LogicalName": "EntrustCASandbox",
+    "LogicalName": "DigiCertCASandbox",
     "GatewayCertificate": {
       "StoreName": "CA",
       "StoreLocation": "LocalMachine",
