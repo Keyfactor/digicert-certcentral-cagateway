@@ -1,1 +1,158 @@
+# DigiCert CertCentral CA AnyGateway
+## Ca-gateway
 
+This integration allows for the Synchronization, Enrollment, and Revocation of certificates from DigiCert CertCentral.
+
+*** 
+# Introduction
+This AnyGateway plug-in enables issuance, revocation, and synchronization of certificates from DigiCert's CertCentral offering.  
+# Prerequisites
+
+## AnyGateway Platform Minimum Version
+The Entrust AnyGateway requires the Keyfactor AnyGateway v21.5.1 or newer
+
+## Migrating to the Entrust AnyGateway plugin from a previous version of the standalone DigiCert Gateway.
+
+## Migration From 20.1.x or Earlier
+If you are upgrading from an older version of the DigiCert gateway that still used the GUI configuration wizard (20.1.x or earlier), you first have to do an upgrade to DigiCert version 21.x to migrate your database to SQL.
+After doing that upgrade, follow the below steps to migrate from 21.x to the current version.
+
+## Migration from 21.9 or Earlier
+
+* Before doing any upgrade, run the following PowerShell command:
+    reg export "HKLM\Software\Keyfactor\Keyfactor CA Gateway" C:\DigiCertGatewayBackup.reg
+* After backing up the registry key, completely uninstall the old version of the DigiCert CA Gateway
+* Follow the instructions to install the AnyGateway product and update the CAProxyServer.config file, but do not do any further configuration yet
+* Run the following PowerShell command:
+    reg import C:\DigiCertGatewayBackup.reg
+* Continue with the gateway configuration, but do NOT run the Set-KeyfactorGatewayEncryptionCert or the Set-KeyfactorGatewayDatabaseConnection cmdlets, as those values were the ones persisted in the registry backup.
+
+This is a one-time process as the DigiCert gateway moves fully to the Keyfactor AnyGateway model. Future upgrades will not require this process.
+
+## Certificate Chain
+
+In order to enroll for certificates the Keyfactor Command server must trust the trust chain. Once you create your Root and/or Subordinate CA, make sure to import the certificate chain into the AnyGateway and Command Server certificate store
+
+
+# Install
+* Download latest successful build from [GitHub Releases](/releases/latest)
+
+* Copy DigiCertCAProxy.dll to the Program Files\Keyfactor\Keyfactor AnyGateway directory
+
+* Update the CAProxyServer.config file
+  * Update the CAConnection section to point at the DigiCertCAProxy class
+  ```xml
+  <alias alias="CAConnector" type="Keyfactor.Extensions.AnyGateway.DigiCert.DigiCertCAConnector, DigiCertCAProxy"/>
+  ```
+
+# Configuration
+The following sections will breakdown the required configurations for the AnyGatewayConfig.json file that will be imported to configure the AnyGateway.
+
+## Templates
+The Template section will map the CA's products to an AD template.
+Available ProductIDs will depend on your Entrust account's inventory
+The LifetimeDays parameter is optional and represents the certificate duration in days. If not provided, default is 365 days.
+ ```json
+  "Templates": {
+	"WebServer": {
+      "ProductID": "ssl_plus",
+      "Parameters": {
+		"LifetimeDays":"365",
+      }
+   }
+}
+ ```
+ 
+## Security
+The security section does not change specifically for the DigiCert CA Gateway.  Refer to the AnyGateway Documentation for more detail.
+```json
+  /*Grant permissions on the CA to users or groups in the local domain.
+	READ: Enumerate and read contents of certificates.
+	ENROLL: Request certificates from the CA.
+	OFFICER: Perform certificate functions such as issuance and revocation. This is equivalent to "Issue and Manage" permission on the Microsoft CA.
+	ADMINISTRATOR: Configure/reconfigure the gateway.
+	Valid permission settings are "Allow", "None", and "Deny".*/
+    "Security": {
+        "Keyfactor\\Administrator": {
+            "READ": "Allow",
+            "ENROLL": "Allow",
+            "OFFICER": "Allow",
+            "ADMINISTRATOR": "Allow"
+        },
+        "Keyfactor\\gateway_test": {
+            "READ": "Allow",
+            "ENROLL": "Allow",
+            "OFFICER": "Allow",
+            "ADMINISTRATOR": "Allow"
+        },		
+        "Keyfactor\\SVC_TimerService": {
+            "READ": "Allow",
+            "ENROLL": "Allow",
+            "OFFICER": "Allow",
+            "ADMINISTRATOR": "None"
+        },
+        "Keyfactor\\SVC_AppPool": {
+            "READ": "Allow",
+            "ENROLL": "Allow",
+            "OFFICER": "Allow",
+            "ADMINISTRATOR": "Allow"
+        }
+    }
+```
+## CerificateManagers
+The Certificate Managers section is optional.
+	If configured, all users or groups granted OFFICER permissions under the Security section
+	must be configured for at least one Template and one Requester. 
+	Uses "<All>" to specify all templates. Uses "Everyone" to specify all requesters.
+	Valid permission values are "Allow" and "Deny".
+```json
+  "CertificateManagers":{
+		"DOMAIN\\Username":{
+			"Templates":{
+				"MyTemplateShortName":{
+					"Requesters":{
+						"Everyone":"Allow",
+						"DOMAIN\\Groupname":"Deny"
+					}
+				},
+				"<All>":{
+					"Requesters":{
+						"Everyone":"Allow"
+					}
+				}
+			}
+		}
+	}
+```
+## CAConnection
+The CA Connection section will determine the API endpoint and configuration data used to connect to DigiCert CA Gateway. 
+* ```APIKey```
+This is the API key to use to connect to the DigiCert API.
+
+```json
+  "CAConnection": {
+	"APIKey"" : "DigiCert API Key"
+  },
+```
+## GatewayRegistration
+There are no specific Changes for the GatewayRegistration section. Refer to the AnyGateway Documentation for more detail.
+```json
+  "GatewayRegistration": {
+    "LogicalName": "EntrustCASandbox",
+    "GatewayCertificate": {
+      "StoreName": "CA",
+      "StoreLocation": "LocalMachine",
+      "Thumbprint": "0123456789abcdef"
+    }
+  }
+```
+
+## ServiceSettings
+There are no specific Changes for the ServiceSettings section. Refer to the AnyGateway Documentation for more detail.
+```json
+  "ServiceSettings": {
+    "ViewIdleMinutes": 8,
+    "FullScanPeriodHours": 24,
+	"PartialScanPeriodMinutes": 240 
+  }
+```

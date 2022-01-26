@@ -7,8 +7,8 @@
     <ProjectGuid>{FA1A7B9D-7B29-43CB-B1E5-CCB2CC4A91D5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>digicert_certcentral_cagateway</RootNamespace>
-    <AssemblyName>digicert-certcentral-cagateway</AssemblyName>
+    <RootNamespace>Keyfactor.Extensions.AnyGateway.DigiCert</RootNamespace>
+    <AssemblyName>DigiCertCAProxy</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,8 +31,50 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.9.0, Culture=neutral, PublicKeyToken=0e99375e54769942, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.BouncyCastle.1.8.9\lib\net40\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="CAProxy.AnyGateway.Core, Version=21.3.2.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keyfactor.AnyGateway.SDK.21.3.2\lib\net462\CAProxy.AnyGateway.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="CAProxy.Interfaces, Version=21.3.2.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keyfactor.AnyGateway.SDK.21.3.2\lib\net462\CAProxy.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="CAProxyDAL, Version=21.3.2.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keyfactor.AnyGateway.SDK.21.3.2\lib\net462\CAProxyDAL.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="CommonCAProxy, Version=21.3.2.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keyfactor.AnyGateway.SDK.21.3.2\lib\net462\CommonCAProxy.dll</HintPath>
+    </Reference>
+    <Reference Include="CSS.Common, Version=1.6.0.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\CSS.Common.1.6.0\lib\net462\CSS.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="CSS.PKI, Version=2.13.0.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\CSS.PKI.2.13.0\lib\net462\CSS.PKI.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.CERTENROLLLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CERTENROLLLibx64.1.0.0.2\lib\net35\Interop.CERTENROLLLib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Keyfactor.Logging, Version=1.1.0.0, Culture=neutral, PublicKeyToken=0ed89d330114ab09, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keyfactor.Logging.1.1.0\lib\netstandard2.0\Keyfactor.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.5.0.0\lib\net461\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,7 +83,39 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\CertCentralBaseCall.cs" />
+    <Compile Include="API\CertificateChain.cs" />
+    <Compile Include="API\CertificateTypeDetails.cs" />
+    <Compile Include="API\CertificateTypes.cs" />
+    <Compile Include="API\CheckDCV.cs" />
+    <Compile Include="API\Contact.cs" />
+    <Compile Include="API\DownloadCertificateByFormat.cs" />
+    <Compile Include="API\Error.cs" />
+    <Compile Include="API\ListCertificateOrders.cs" />
+    <Compile Include="API\ListContainers.cs" />
+    <Compile Include="API\ListDomains.cs" />
+    <Compile Include="API\ListDuplicates.cs" />
+    <Compile Include="API\ListOrganizations.cs" />
+    <Compile Include="API\ListRequests.cs" />
+    <Compile Include="API\OrderCertificate.cs" />
+    <Compile Include="API\Product.cs" />
+    <Compile Include="API\Reissue.cs" />
+    <Compile Include="API\RequestSummary.cs" />
+    <Compile Include="API\RevokeCertificate.cs" />
+    <Compile Include="API\StatusChanges.cs" />
+    <Compile Include="API\UpdateRequestStatus.cs" />
+    <Compile Include="API\ViewCertificateOrder.cs" />
+    <Compile Include="CertCentralCertType.cs" />
+    <Compile Include="Client\CertCentralClient.cs" />
+    <Compile Include="Client\CertCentralClientUtilities.cs" />
+    <Compile Include="Client\Conversions.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="DigiCertCAConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
