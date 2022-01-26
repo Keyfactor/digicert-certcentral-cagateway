@@ -104,6 +104,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			string commonName = subjectParsed.GetValueList(X509Name.CN).Cast<string>().LastOrDefault();
 			string organization = subjectParsed.GetValueList(X509Name.O).Cast<string>().LastOrDefault();
 
+			if (productInfo.ProductParameters.TryGetValue(DigiCertConstants.RequestAttributes.ORGANIZATION_NAME, out string orgName))
+			{
+				// If org name is provided as a parameter, it overrides whatever is in the CSR
+				organization = orgName;
+			}
+
 			string signatureHash = certType.signatureAlgorithm;
 
 			List<string> dnsNames = new List<string>();
@@ -113,20 +119,25 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
-			ListOrganizationsResponse organizations = client.ListOrganizations(new ListOrganizationsRequest());
-			if (organizations.Status == CertCentralBaseResponse.StatusType.ERROR)
+			int? organizationId = null;
+			// DV certs have no organization, so only do the org check if its a non-DV cert
+			if (!string.Equals(productInfo.ProductID, DigiCertConstants.ProductTypes.DV_SSL_CERT, StringComparison.OrdinalIgnoreCase))
 			{
-				Logger.Error($"Error from CertCentral client: {organizations.Errors.First().message}");
-			}
-			Organization org = organizations.Organizations.FirstOrDefault(x => x.Name.Equals(organization, StringComparison.OrdinalIgnoreCase));
-			int organizationId = 0;
-			if (org != null)
-			{
-				organizationId = org.Id;
-			}
-			else
-			{
-				throw new Exception($"Organization '{organization}' is invalid for this account, please check name");
+				ListOrganizationsResponse organizations = client.ListOrganizations(new ListOrganizationsRequest());
+				if (organizations.Status == CertCentralBaseResponse.StatusType.ERROR)
+				{
+					Logger.Error($"Error from CertCentral client: {organizations.Errors.First().message}");
+				}
+
+				Organization org = organizations.Organizations.FirstOrDefault(x => x.Name.Equals(organization, StringComparison.OrdinalIgnoreCase));
+				if (org != null)
+				{
+					organizationId = org.Id;
+				}
+				else
+				{
+					throw new Exception($"Organization '{organization}' is invalid for this account, please check name");
+				}
 			}
 
 			// Set up request
@@ -135,7 +146,36 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			orderRequest.Certificate.SignatureHash = signatureHash;
 			orderRequest.Certificate.DNSNames = dnsNames;
 			orderRequest.SetOrganization(organizationId);
-			orderRequest.DCVMethod = "email";
+
+			string dcvMethod = "email";
+
+			// AnyGateway Core does not currently support retreiving DCV tokens, the following code block can be uncommented once support is added.
+
+			//if (productInfo.ProductParameters.TryGetValue(DigiCertConstants.RequestAttributes.DCV_METHOD, out string rawDCV))
+			//{
+			//	Logger.Trace($"Parsing DCV method: {rawDCV}");
+			//	if (rawDCV.IndexOf("mail", StringComparison.OrdinalIgnoreCase) >= 0)
+			//	{
+			//		Logger.Trace("Selecting DCV method 'email'");
+			//		dcvMethod = "email";
+			//	}
+			//	else if (rawDCV.IndexOf("dns", StringComparison.OrdinalIgnoreCase) >= 0)
+			//	{
+			//		Logger.Trace("Selecting DCV method 'dns-txt-token'");
+			//		dcvMethod = "dns-txt-token";
+			//	}
+			//	else if (rawDCV.IndexOf("http", StringComparison.OrdinalIgnoreCase) >= 0)
+			//	{
+			//		Logger.Trace("Selecting DCV method 'http-token'");
+			//		dcvMethod = "http-token";
+			//	}
+			//	else
+			//	{
+			//		Logger.Warn($"Unexpected DCV method '{rawDCV}'. Falling back to default of 'email'");
+			//	}
+			//}
+
+			orderRequest.DCVMethod = dcvMethod;
 			if (customExpirationDate != null)
 			{
 				orderRequest.CustomExpirationDate = customExpirationDate;
