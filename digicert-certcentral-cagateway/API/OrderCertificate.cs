@@ -78,6 +78,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("container")]
 		public CertificateOrderContainer Container { get; set; }
 
+		[JsonProperty("custom_fields")]
+		public List<MetadataField> CustomFields { get; set; }
+
 		public void SetOrganization(int? organizationId)
 		{
 			if (organizationId.HasValue)
@@ -98,6 +101,15 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 	{
 		[JsonProperty("id")]
 		public int Id { get; set; }
+	}
+
+	public class MetadataField
+	{
+		[JsonProperty("metadata_id")]
+		public int MetadataId { get; set; }
+
+		[JsonProperty("value")]
+		public string Value { get; set; }
 	}
 
 	public class Requests
