@@ -266,6 +266,24 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return listRequestsResponse;
 		}
 
+		public ListMetadataResponse ListMetadata(ListMetadataRequest request)
+		{
+			CertCentralResponse response = Request(request, request.BuildParameters());
+
+			ListMetadataResponse listMetadataResponse = new ListMetadataResponse();
+
+			if (IsError(response.Response, listMetadataResponse.ContentType))
+			{
+				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
+				listMetadataResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
+				listMetadataResponse.Errors = errors.errors;
+			}
+			else
+				listMetadataResponse = JsonConvert.DeserializeObject<ListMetadataResponse>(response.Response);
+
+			return listMetadataResponse;
+		}
+
 		public OrderResponse OrderCertificate(OrderRequest request, bool adminUser)
 		{
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), adminUser);
