@@ -535,11 +535,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		/// </summary>
 		/// <param name="nameId">The name ID of the certificate type whose details are required.</param>
 		/// <returns></returns>
-		public CertificateTypeDetailsResponse GetCertificateTypeDetails(string nameId)
+		public CertificateTypeDetailsResponse GetCertificateTypeDetails(CertificateTypeDetailsRequest detailsRequest)
 		{
-			CertificateTypeDetailsRequest detailsRequest = new CertificateTypeDetailsRequest(nameId);
 			CertificateTypeDetailsResponse detailsResponse = new CertificateTypeDetailsResponse();
-			CertCentralResponse response = Request(detailsRequest);
+			CertCentralResponse response = Request(detailsRequest, detailsRequest.BuildParameters());
 
 			if (IsError(response.Response, detailsResponse.ContentType))
 			{

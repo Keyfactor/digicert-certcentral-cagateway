@@ -19,17 +19,17 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		private static ILogger Logger => LogHandler.GetClassLogger<Conversions>();
 
 		/// <summary>
-		/// Uses the <see cref="ICAConnectorConfigProvider"/> to build a DigiCert client.
+		/// Uses the <see cref="DigiCertCAConfig"/> to build a DigiCert client.
 		/// </summary>
-		/// <param name="ConfigProvider"></param>
+		/// <param name="Config"></param>
 		/// <returns></returns>
-		public static CertCentralClient BuildCertCentralClient(ICAConnectorConfigProvider ConfigProvider)
+		public static CertCentralClient BuildCertCentralClient(DigiCertCAConfig Config)
 		{
 			Logger.LogTrace("Entered BuildCertCentralClient");
 			try
 			{
 				Logger.LogTrace("Building CertCentralClient with retrieved configuration information");
-				string apiKey = (string)ConfigProvider.CAConnectionData["APIKey"];
+				string apiKey = Config.APIKey;
 				return new CertCentralClient(apiKey);
 			}
 			catch (Exception ex)
