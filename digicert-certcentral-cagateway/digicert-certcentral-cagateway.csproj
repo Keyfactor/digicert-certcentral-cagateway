@@ -111,6 +111,7 @@
     <Compile Include="Client\CertCentralClientUtilities.cs" />
     <Compile Include="Client\Conversions.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="DigiCertCAConfig.cs" />
     <Compile Include="DigiCertCAConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

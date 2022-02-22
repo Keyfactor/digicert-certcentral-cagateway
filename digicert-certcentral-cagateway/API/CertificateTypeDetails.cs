@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 
 using System.Collections.Generic;
+using System.Text;
+using System.Web;
 
 namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 {
@@ -17,6 +19,34 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		{
 			Method = "GET";
 			Resource = $"services/v2/product/{nameId}";
+			ContainerId = null;
+		}
+
+		/// <summary>
+		/// Creates a new <see cref="CertificateTypeDetailsRequest"/> with the appropriate information.
+		/// </summary>
+		/// <param name="nameId">The name ID of the certificate type desired.</param>
+		/// <param name="containerId">The ID of the container to use for product information</param>
+		public CertificateTypeDetailsRequest(string nameId, int? containerId)
+		{
+			Method = "GET";
+			Resource = $"services/v2/product/{nameId}";
+			ContainerId = containerId;
+		}
+
+		[JsonProperty("container_id")]
+		public int? ContainerId { get; set; }
+
+		public new string BuildParameters()
+		{
+			StringBuilder sbParameters = new StringBuilder();
+
+			if (ContainerId != null)
+			{
+				sbParameters.Append("&container_id=").Append(HttpUtility.UrlEncode(ContainerId.ToString()));
+			}
+
+			return sbParameters.ToString();
 		}
 	}
 
