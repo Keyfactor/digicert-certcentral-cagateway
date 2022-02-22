@@ -20,6 +20,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public class Config
 		{
 			public const string APIKEY = "APIKey";
+			public const string DIVISION_ID = "DivisionId";
 		}
 
 		public class RequestAttributes
