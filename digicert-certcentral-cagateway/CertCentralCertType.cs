@@ -62,26 +62,26 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <summary>
 		/// Gets all of the product types for DigiCert.
 		/// </summary>
-		/// <param name="proxyConfigProvider"></param>
+		/// <param name="proxyConfig"></param>
 		/// <returns></returns>
-		public static List<CABaseCertType> GetAllTypes(ICAConnectorConfigProvider proxyConfigProvider)
+		public static List<CABaseCertType> GetAllTypes(DigiCertCAConfig proxyConfig)
 		{
 			if (_allTypes == null || !_allTypes.Any())
 			{
-				_allTypes = RetrieveCertCentralCertTypes(proxyConfigProvider);
+				_allTypes = RetrieveCertCentralCertTypes(proxyConfig);
 			}
 
 			return _allTypes.Cast<CABaseCertType>().ToList();
 		}
 
 		/// <summary>
-		/// Uses the <see cref="ICAConnectorConfigProvider"/> to build a client and retrieve the product types for the given account.
+		/// Uses the <see cref="DigiCertCAConfig"/> to build a client and retrieve the product types for the given account.
 		/// </summary>
-		/// <param name="proxyConfigProvider"></param>
+		/// <param name="proxyConfig"></param>
 		/// <returns></returns>
-		private static List<CertCentralCertType> RetrieveCertCentralCertTypes(ICAConnectorConfigProvider proxyConfigProvider)
+		private static List<CertCentralCertType> RetrieveCertCentralCertTypes(DigiCertCAConfig proxyConfig)
 		{
-			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(proxyConfigProvider);
+			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(proxyConfig);
 
 			// Get all of the cert types.
 			CertificateTypesResponse certTypes = client.GetAllCertificateTypes();
@@ -94,7 +94,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			List<CertCentralCertType> types = new List<CertCentralCertType>();
 			foreach (var type in certTypes.Products)
 			{
-				CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(type.NameId);
+				CertificateTypeDetailsRequest detailsRequest = new CertificateTypeDetailsRequest(type.NameId, proxyConfig.DivisionId);
+				CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(detailsRequest);
 				if (details.Status == API.CertCentralBaseResponse.StatusType.ERROR)
 				{
 					throw new UnsuccessfulRequestException(string.Join("\n", certTypes.Errors?.Select(x => x.message)), unchecked((uint)HRESULTs.INVALID_DATA));

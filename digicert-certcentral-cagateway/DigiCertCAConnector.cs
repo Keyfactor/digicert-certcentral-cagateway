@@ -13,6 +13,8 @@ using Keyfactor.Extensions.AnyGateway.DigiCert.Client;
 
 using Microsoft.Extensions.Logging;
 
+using Newtonsoft.Json;
+
 using Org.BouncyCastle.Asn1.X509;
 
 using System;
@@ -36,7 +38,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <summary>
 		/// Provides configuration information for the <see cref="DigiCertCAConnector"/>.
 		/// </summary>
-		private ICAConnectorConfigProvider ConfigProvider { get; set; }
+
+		private DigiCertCAConfig Config { get; set; }
 
 		private Dictionary<int, string> DCVTokens { get; } = new Dictionary<int, string>();
 
@@ -46,7 +49,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 		public override void Initialize(ICAConnectorConfigProvider configProvider)
 		{
-			ConfigProvider = configProvider;
+			string rawConfig = JsonConvert.SerializeObject(configProvider.CAConnectionData);
+			Config = JsonConvert.DeserializeObject<DigiCertCAConfig>(rawConfig);
 		}
 
 		/// <summary>
@@ -79,7 +83,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public override EnrollmentResult Enroll(ICertificateDataReader certificateDataReader, string csr, string subject, Dictionary<string, string[]> san, EnrollmentProductInfo productInfo, CSS.PKI.PKIConstants.X509.RequestFormat requestFormat, EnrollmentType enrollmentType)
 		{
 			OrderResponse orderResponse = new OrderResponse();
-			CertCentralCertType certType = (CertCentralCertType)CertCentralCertType.GetAllTypes(ConfigProvider).FirstOrDefault(x => x.ProductCode.Equals(productInfo.ProductID));
+			CertCentralCertType certType = (CertCentralCertType)CertCentralCertType.GetAllTypes(Config).FirstOrDefault(x => x.ProductCode.Equals(productInfo.ProductID));
 			OrderRequest orderRequest = new OrderRequest(certType);
 
 			var days = (productInfo.ProductParameters.ContainsKey("LifetimeDays")) ? int.Parse(productInfo.ProductParameters["LifetimeDays"]) : 365;
@@ -118,7 +122,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				dnsNames = new List<string>(san["Dns"]);
 			}
 
-			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
+			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 			int? organizationId = null;
 			// DV certs have no organization, so only do the org check if its a non-DV cert
 			if (!string.Equals(productInfo.ProductID, DigiCertConstants.ProductTypes.DV_SSL_CERT, StringComparison.OrdinalIgnoreCase))
@@ -137,6 +141,20 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				else
 				{
 					throw new Exception($"Organization '{organization}' is invalid for this account, please check name");
+				}
+			}
+
+			// Process metadata fields
+			orderRequest.CustomFields = new List<MetadataField>();
+			var metadata = client.ListMetadata(new ListMetadataRequest()).MetadataFields.Where(m => m.Active).ToList();
+			Logger.Trace($"Found {metadata.Count()} active metadata fields in the account");
+			foreach (var field in metadata)
+			{
+				// See if the field has been provided in the request
+				if (productInfo.ProductParameters.TryGetValue(field.Label, out string fieldValue))
+				{
+					Logger.Trace($"Found {field.Label} in the request, adding...");
+					orderRequest.CustomFields.Add(new MetadataField() { MetadataId = field.Id, Value = fieldValue });
 				}
 			}
 
@@ -215,7 +233,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			string certId = idParts.Last();
 
 			// Get status of cert and the cert itself from Digicert
-			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
+			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 			ViewCertificateOrderResponse orderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
 			if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
@@ -260,7 +278,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			try
 			{
-				CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
+				CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 				Logger.Debug("Attempting to ping DigiCert API.");
 				ListDomainsResponse response = client.ListDomains(new ListDomainsRequest());
@@ -289,7 +307,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			int orderId = Int32.Parse(caRequestID.Substring(0, caRequestID.IndexOf('-')));
 			string certId = caRequestID.Substring(caRequestID.IndexOf('-') + 1);
-			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
+			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 			ViewCertificateOrderResponse orderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
 			if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR || orderResponse.status.ToLower() != "issued")
 			{
@@ -353,7 +371,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			List<StatusOrder> certsToSync = new List<StatusOrder>();
 			Logger.Debug("Attempting to create a Cert Central Client");
 
-			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(ConfigProvider);
+			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 			List<string> skippedOrders = new List<string>();
 
@@ -552,7 +570,16 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			// Get product ID details.
-			CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(product.NameId);
+			CertificateTypeDetailsRequest detailsRequest = new CertificateTypeDetailsRequest(product.NameId);
+
+			detailsRequest.ContainerId = null;
+			if (connectionInfo.ContainsKey(DigiCertConstants.Config.DIVISION_ID))
+			{
+				int.TryParse((string)connectionInfo[DigiCertConstants.Config.DIVISION_ID], out int divId);
+				detailsRequest.ContainerId = divId;
+			}
+
+			CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(detailsRequest);
 			if (details.Errors.Any())
 			{
 				throw new Exception($"Validation of '{productId}' failed for the following reasons: {string.Join(" ", details.Errors.Select(x => x.message))}.");
@@ -580,14 +607,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <returns></returns>
 		public string GetProductIDComment()
 		{
-			if (ConfigProvider == null)
+			if (Config == null)
 			{
 				throw new NotImplementedException();
 			}
 
 			try
 			{
-				string authAPIKey = (string)ConfigProvider.CAConnectionData[DigiCertConstants.Config.APIKEY];
+				string authAPIKey = Config.APIKey;
 				CertCentralClient client = new CertCentralClient(authAPIKey);
 
 				// Get product types.
@@ -920,7 +947,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			// Check that the product type is still valid.
 			Logger.Trace($"Checking that the product '{productId}' exists.");
-			CABaseCertType productType = CertCentralCertType.GetAllTypes(ConfigProvider).FirstOrDefault(x => x.ProductCode.Equals(productId, StringComparison.InvariantCultureIgnoreCase));
+			CABaseCertType productType = CertCentralCertType.GetAllTypes(Config).FirstOrDefault(x => x.ProductCode.Equals(productId, StringComparison.InvariantCultureIgnoreCase));
 			if (productType == null)
 			{
 				throw new Exception($"The product type '{productId}' does not exist.");

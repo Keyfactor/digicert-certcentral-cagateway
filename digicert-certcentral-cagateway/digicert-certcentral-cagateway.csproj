@@ -92,6 +92,7 @@
     <Compile Include="API\DownloadCertificateByFormat.cs" />
     <Compile Include="API\Error.cs" />
     <Compile Include="API\ListCertificateOrders.cs" />
+    <Compile Include="API\ListMetadata.cs" />
     <Compile Include="API\ListContainers.cs" />
     <Compile Include="API\ListDomains.cs" />
     <Compile Include="API\ListDuplicates.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Client\CertCentralClientUtilities.cs" />
     <Compile Include="Client\Conversions.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="DigiCertCAConfig.cs" />
     <Compile Include="DigiCertCAConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
