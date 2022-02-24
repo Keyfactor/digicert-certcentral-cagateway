@@ -21,7 +21,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		/// <summary>
 		/// Private instance of the logger.
 		/// </summary>
-		private static ILogger Logger => LogHandler.GetClassLogger<CertCentralClientUtilities>();
+		private static ILogger Logger => LogHandler.GetClassLogger<DigiCertCAConnector>();
 
 		/// <summary>
 		/// Uses the <see cref="DigiCertCAConfig"/> to build a DigiCert client.
