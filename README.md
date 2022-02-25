@@ -18,7 +18,7 @@ In the installed programs list on the gateway machine, if the install is listed 
 If you are upgrading from an older version of the DigiCert gateway that still used the GUI configuration wizard (20.1.x or earlier), you first have to do an upgrade to DigiCert version 21.x to migrate your database to SQL.
 After doing that upgrade, follow the below steps to migrate from 21.x to the current version.
 
-## Migration from 21.9 or Earlier
+## Migration from 21.3.2 or Earlier
 
 * Before doing any upgrade, run the following PowerShell command:
     reg export "HKLM\Software\Keyfactor\Keyfactor CA Gateway" C:\DigiCertGatewayBackup.reg
