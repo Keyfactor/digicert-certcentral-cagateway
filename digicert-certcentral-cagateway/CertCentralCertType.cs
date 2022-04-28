@@ -14,6 +14,7 @@ using Keyfactor.Logging;
 
 using Microsoft.Extensions.Logging;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -101,23 +102,31 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			List<CertCentralCertType> types = new List<CertCentralCertType>();
 			foreach (var type in certTypes.Products)
 			{
-				Logger.LogTrace($"RetrieveCertCentralType: Retrieving details for product type: {type.NameId}");
-				CertificateTypeDetailsRequest detailsRequest = new CertificateTypeDetailsRequest(type.NameId, proxyConfig.DivisionId);
-				CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(detailsRequest);
-				if (details.Status == API.CertCentralBaseResponse.StatusType.ERROR)
+				try
 				{
-					throw new UnsuccessfulRequestException(string.Join("\n", certTypes.Errors?.Select(x => x.message)), unchecked((uint)HRESULTs.INVALID_DATA));
-				}
+					Logger.LogTrace($"RetrieveCertCentralType: Retrieving details for product type: {type.NameId}");
+					CertificateTypeDetailsRequest detailsRequest = new CertificateTypeDetailsRequest(type.NameId, proxyConfig.DivisionId);
+					CertificateTypeDetailsResponse details = client.GetCertificateTypeDetails(detailsRequest);
+					if (details.Status == API.CertCentralBaseResponse.StatusType.ERROR)
+					{
+						throw new UnsuccessfulRequestException(string.Join("\n", certTypes.Errors?.Select(x => x.message)), unchecked((uint)HRESULTs.INVALID_DATA));
+					}
 
-				types.Add(new CertCentralCertType
+					types.Add(new CertCentralCertType
+					{
+						DisplayName = $"{details.Name} {(UnsupportedProductTypes.Contains(details.Name) ? "(Enrollment Unavailable)" : string.Empty)}",
+						multidomain = details.AdditionalDNSNamesAllowed,
+						ProductCode = details.NameId,
+						ShortName = details.Name,
+						ProductType = details.Type,
+						signatureAlgorithm = details.SignatureHashType.DefaultHashTypeId
+					});
+				}
+				catch (Exception ex)
 				{
-					DisplayName = $"{details.Name} {(UnsupportedProductTypes.Contains(details.Name) ? "(Enrollment Unavailable)" : string.Empty)}",
-					multidomain = details.AdditionalDNSNamesAllowed,
-					ProductCode = details.NameId,
-					ShortName = details.Name,
-					ProductType = details.Type,
-					signatureAlgorithm = details.SignatureHashType.DefaultHashTypeId
-				});
+					Logger.LogError($"RetrieveCertCentralType: Unable to retrieve details for product type: {type.NameId}. Skipping...");
+					Logger.LogTrace($"RetrieveCertCentralType: Type retrieval error details: {ex.Message}");
+				}
 			}
 			return types;
 		}
