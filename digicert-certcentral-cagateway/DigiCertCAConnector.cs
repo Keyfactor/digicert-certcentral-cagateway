@@ -1,4 +1,11 @@
-﻿using CAProxy.AnyGateway;
+﻿// Copyright 2022 Keyfactor
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
+// and limitations under the License.
+
+using CAProxy.AnyGateway;
 using CAProxy.AnyGateway.Interfaces;
 using CAProxy.AnyGateway.Models;
 using CAProxy.AnyGateway.Models.Configuration;
@@ -10,6 +17,7 @@ using CSS.Common;
 
 using Keyfactor.Extensions.AnyGateway.DigiCert.API;
 using Keyfactor.Extensions.AnyGateway.DigiCert.Client;
+using Keyfactor.Logging;
 
 using Microsoft.Extensions.Logging;
 
@@ -35,10 +43,11 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 	{
 		#region Fields and Constructors
 
+		private static readonly ILogger Log = LogHandler.GetClassLogger<DigiCertCAConnector>();
+
 		/// <summary>
 		/// Provides configuration information for the <see cref="DigiCertCAConnector"/>.
 		/// </summary>
-
 		private DigiCertCAConfig Config { get; set; }
 
 		private Dictionary<int, string> DCVTokens { get; } = new Dictionary<int, string>();
@@ -82,6 +91,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <returns></returns>
 		public override EnrollmentResult Enroll(ICertificateDataReader certificateDataReader, string csr, string subject, Dictionary<string, string[]> san, EnrollmentProductInfo productInfo, CSS.PKI.PKIConstants.X509.RequestFormat requestFormat, EnrollmentType enrollmentType)
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			OrderResponse orderResponse = new OrderResponse();
 			CertCentralCertType certType = (CertCentralCertType)CertCentralCertType.GetAllTypes(Config).FirstOrDefault(x => x.ProductCode.Equals(productInfo.ProductID));
 			OrderRequest orderRequest = new OrderRequest(certType);
@@ -130,7 +140,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				ListOrganizationsResponse organizations = client.ListOrganizations(new ListOrganizationsRequest());
 				if (organizations.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
-					Logger.Error($"Error from CertCentral client: {organizations.Errors.First().message}");
+					Log.LogError($"Error from CertCentral client: {organizations.Errors.First().message}");
 				}
 
 				Organization org = organizations.Organizations.FirstOrDefault(x => x.Name.Equals(organization, StringComparison.OrdinalIgnoreCase));
@@ -147,7 +157,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			// Process metadata fields
 			orderRequest.CustomFields = new List<MetadataField>();
 			var metadata = client.ListMetadata(new ListMetadataRequest()).MetadataFields.Where(m => m.Active).ToList();
-			Logger.Trace($"Found {metadata.Count()} active metadata fields in the account");
+			Log.LogTrace($"Found {metadata.Count()} active metadata fields in the account");
 			foreach (var field in metadata)
 			{
 				// See if the field has been provided in the request
@@ -203,7 +213,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				orderRequest.ValidityYears = validityYears;
 			}
 
-			Logger.Trace("Making request to Enroll");
+			Log.LogTrace("Making request to Enroll");
 			switch (enrollmentType)
 			{
 				case EnrollmentType.New:
@@ -218,6 +228,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				default:
 					throw new Exception($"The enrollment type '{enrollmentType}' is invalid for the DigiCert gateway.");
 			}
+			Log.MethodExit(LogLevel.Trace);
 		}
 
 		/// <summary>
@@ -227,6 +238,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <returns></returns>
 		public override CAConnectorCertificate GetSingleRecord(string caRequestId)
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			// Split ca request id into order and cert id
 			string[] idParts = caRequestId.Split('-');
 			int orderId = Int32.Parse(idParts.First());
@@ -239,7 +251,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 			{
 				string errorMessage = String.Format("Request {0} was not found in CertCentral database or is not valid", orderId);
-				Logger.Info(errorMessage);
+				Log.LogInformation(errorMessage);
 				throw new COMException(errorMessage, HRESULTs.PROP_NOT_FOUND);
 			}
 
@@ -255,10 +267,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				}
 				else
 				{
-					Logger.Warn($"Unexpected error downloading certificate {certId} for order {orderId}: {certificateChainResponse.Errors.FirstOrDefault()?.message}");
+					Log.LogWarning($"Unexpected error downloading certificate {certId} for order {orderId}: {certificateChainResponse.Errors.FirstOrDefault()?.message}");
 				}
 			}
-
+			Log.MethodExit(LogLevel.Trace);
 			return new CAConnectorCertificate
 			{
 				CARequestID = caRequestId,
@@ -276,11 +288,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// </summary>
 		public override void Ping()
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			try
 			{
 				CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
-				Logger.Debug("Attempting to ping DigiCert API.");
+				Log.LogDebug("Attempting to ping DigiCert API.");
 				ListDomainsResponse response = client.ListDomains(new ListDomainsRequest());
 
 				if (response.Errors.Count > 0)
@@ -288,13 +301,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					throw new Exception($"Error attempting to ping DigiCert: {string.Join("\n", response.Errors)}");
 				}
 
-				Logger.Debug("Successfully pinged DigiCert API.");
+				Log.LogDebug("Successfully pinged DigiCert API.");
 			}
 			catch (Exception e)
 			{
-				Logger.Error($"There was an error contacting DigiCert: {e.Message}.");
+				Log.LogError($"There was an error contacting DigiCert: {e.Message}.");
 				throw new Exception($"Error attempting to ping DigiCert: {e.Message}.", e);
 			}
+			Log.MethodExit(LogLevel.Trace);
 		}
 
 		/// <summary>
@@ -305,6 +319,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="revocationReason">The revocation reason.</param>
 		public override int Revoke(string caRequestID, string hexSerialNumber, uint revocationReason)
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			int orderId = Int32.Parse(caRequestID.Substring(0, caRequestID.IndexOf('-')));
 			string certId = caRequestID.Substring(caRequestID.IndexOf('-') + 1);
 			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
@@ -312,7 +327,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR || orderResponse.status.ToLower() != "issued")
 			{
 				string errorMessage = String.Format("Request {0} was not found in CertCentral database or is not valid", orderId);
-				Logger.Info(errorMessage);
+				Log.LogInformation(errorMessage);
 				throw new COMException(errorMessage, HRESULTs.PROP_NOT_FOUND);
 			}
 			string req = "";
@@ -321,7 +336,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			{
 				req = request_temp.comments.Replace("CERTIFICATE_REQUESTOR:", "").Trim();
 			}
-			Logger.Trace("Making request to Revoke");
+			Log.LogTrace("Making request to Revoke");
 			RevokeCertificateResponse revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
 
 			ViewCertificateOrderResponse secondOrderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
@@ -333,9 +348,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 			else
 			{
-				Logger.Warn($"No pending revocation found for Order {orderId}. Order may not have been revoked successfully");
+				Log.LogWarning($"No pending revocation found for Order {orderId}. Order may not have been revoked successfully");
 			}
 			CAConnectorCertificate revokedCert = GetSingleRecord(caRequestID);
+			Log.MethodExit(LogLevel.Trace);
 			return revokedCert.Status;
 		}
 
@@ -360,6 +376,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="cancelToken">The cancellation token.</param>
 		public override void Synchronize(ICertificateDataReader certificateDataReader, BlockingCollection<CAConnectorCertificate> blockingBuffer, CertificateAuthoritySyncInfo certificateAuthoritySyncInfo, CancellationToken cancelToken)
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			bool fullSync = certificateAuthoritySyncInfo.DoFullSync;
 			DateTime? lastSync = certificateAuthoritySyncInfo.OverallLastSync;
 			lastSync = lastSync.HasValue ? lastSync.Value.AddHours(-7) : DateTime.MinValue;  // We are doing this for a current issue with Digicert treating the time zone as mountain time. -7 to accomodate daylight saving
@@ -369,7 +386,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			List<CAConnectorCertificate> certs = new List<CAConnectorCertificate>();
 			List<StatusOrder> certsToSync = new List<StatusOrder>();
-			Logger.Debug("Attempting to create a Cert Central Client");
+			Log.LogDebug("Attempting to create a Cert Central Client");
 
 			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
@@ -381,7 +398,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
 					Error error = orderResponse.Errors[0];
-					Logger.Error("Error in listing all certificate orders");
+					Log.LogError("Error in listing all certificate orders");
 					throw new Exception($"DigiCert CertCentral Web Service returned {error.code} - {error.message} to retreive all rows");
 				}
 				else
@@ -410,7 +427,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				if (statusResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
 					Error error = statusResponse.Errors[0];
-					Logger.Error("Error in grabbing certificates for partial sync");
+					Log.LogError("Error in grabbing certificates for partial sync");
 					throw new Exception($"DigiCert CertCentral Web Service returned {error.code} - {error.message} to retreive all rows");
 				}
 				if (statusResponse.orders?.Count > 0)
@@ -455,7 +472,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 						catch (Exception)
 						{
 							skippedOrders.Add(order.certificate_id.ToString());
-							Logger.Warn($"An error occurred attempting to sync order '{order.certificate_id}'. This order will be skipped.");
+							Log.LogWarning($"An error occurred attempting to sync order '{order.certificate_id}'. This order will be skipped.");
 							continue;
 						}
 
@@ -492,7 +509,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			if (cancelToken.IsCancellationRequested)
 			{
-				Logger.Info("DigiCert sync cancelled.");
+				Log.LogInformation("DigiCert sync cancelled.");
 
 				// Throwing here for consistent behavior on cancellation.
 				cancelToken.ThrowIfCancellationRequested();
@@ -500,13 +517,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			if (skippedOrders?.Count > 0)
 			{
-				Logger.Info($"Sync skipped the following orders: {string.Join(",", skippedOrders.ToArray())}");
+				Log.LogInformation($"Sync skipped the following orders: {string.Join(",", skippedOrders.ToArray())}");
 			}
 
 			foreach (CAConnectorCertificate record in certs)
 			{
 				blockingBuffer.Add(record, cancelToken);
 			}
+			Log.MethodExit(LogLevel.Trace);
 		}
 
 		/// <summary>
@@ -515,10 +533,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="connectionInfo">The information used to connect to the CA.</param>
 		public override void ValidateCAConnectionInfo(Dictionary<string, object> connectionInfo)
 		{
-			Logger.Trace("Entering 'ValidateCAConnectionInfo' method.");
+			Log.MethodEntry(LogLevel.Trace);
 			List<string> errors = new List<string>();
 
-			Logger.Trace("Checking the API Admin Key.");
+			Log.LogTrace("Checking the API Admin Key.");
 			string apiKey = connectionInfo.ContainsKey(DigiCertConstants.Config.APIKEY) ? (string)connectionInfo[DigiCertConstants.Config.APIKEY] : string.Empty;
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
@@ -527,14 +545,13 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			CertCentralClient digiClient = new CertCentralClient(apiKey);
 			ListDomainsResponse domains = digiClient.ListDomains(new ListDomainsRequest());
-			Logger.Debug("Domain Status: " + domains.Status);
+			Log.LogDebug("Domain Status: " + domains.Status);
 			if (domains.Status == CertCentralBaseResponse.StatusType.ERROR)
 			{
-				Logger.Error($"Error from CertCentral client: {domains.Errors[0].message}");
+				Log.LogError($"Error from CertCentral client: {domains.Errors[0].message}");
 				errors.Add("Error grabbing DigiCert domains");
 			}
-			Logger.Trace("Leaving 'ValidateCAConnectionInfo' method.");
-
+			Log.MethodExit(LogLevel.Trace);
 			// We cannot proceed if there are any errors.
 			if (errors.Any())
 			{
@@ -548,6 +565,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="productInfo">The product information.</param>
 		public override void ValidateProductInfo(EnrollmentProductInfo productInfo, Dictionary<string, object> connectionInfo)
 		{
+			Log.MethodEntry(LogLevel.Trace);
 			// Set up.
 			string productId = productInfo.ProductID;
 			string apiKey = (string)connectionInfo[DigiCertConstants.Config.APIKEY];
@@ -584,6 +602,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			{
 				throw new Exception($"Validation of '{productId}' failed for the following reasons: {string.Join(" ", details.Errors.Select(x => x.message))}.");
 			}
+			Log.MethodExit(LogLevel.Trace);
 		}
 
 		#endregion ICAConnector Methods
@@ -597,7 +616,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			return new Dictionary<string, object>()
 			{
-				{ DigiCertConstants.Config.APIKEY, "" }
+				{ DigiCertConstants.Config.APIKEY, "" },
+				{ DigiCertConstants.Config.DIVISION_ID, "" }
 			};
 		}
 
@@ -648,6 +668,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				{
 					Comments = "API Key for connecting to DigiCert",
 					Hidden = true,
+					DefaultValue = ""
+				},
+				[DigiCertConstants.Config.DIVISION_ID] = new PropertyConfigInfo()
+				{
+					Comments = "Division ID to use for retrieving product details (only if account is configured with per-divison product settings)",
+					Hidden = false,
 					DefaultValue = ""
 				}
 			};
