@@ -113,10 +113,34 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					break;
 			}
 
+			List<string> dnsNames = new List<string>();
+			if (san.ContainsKey("Dns"))
+			{
+				dnsNames = new List<string>(san["Dns"]);
+			}
+
 			// Parse subject
-			X509Name subjectParsed = new X509Name(subject);
-			string commonName = subjectParsed.GetValueList(X509Name.CN).Cast<string>().LastOrDefault();
-			string organization = subjectParsed.GetValueList(X509Name.O).Cast<string>().LastOrDefault();
+			X509Name subjectParsed = null;
+			string commonName = null, organization = null;
+			try
+			{
+				subjectParsed = new X509Name(subject);
+				commonName = subjectParsed.GetValueList(X509Name.CN).Cast<string>().LastOrDefault();
+				organization = subjectParsed.GetValueList(X509Name.O).Cast<string>().LastOrDefault();
+			}
+			catch (Exception) { }
+
+			if (commonName == null)
+			{
+				if (dnsNames.Count > 0)
+				{
+					commonName = dnsNames[0];
+				}
+				else
+				{
+					throw new Exception("No Common Name or DNS SAN provided, unable to enroll");
+				}
+			}
 
 			if (productInfo.ProductParameters.TryGetValue(DigiCertConstants.RequestAttributes.ORGANIZATION_NAME, out string orgName))
 			{
@@ -126,17 +150,16 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			string signatureHash = certType.signatureAlgorithm;
 
-			List<string> dnsNames = new List<string>();
-			if (san.ContainsKey("Dns"))
-			{
-				dnsNames = new List<string>(san["Dns"]);
-			}
-
 			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 			int? organizationId = null;
 			// DV certs have no organization, so only do the org check if its a non-DV cert
 			if (!string.Equals(productInfo.ProductID, DigiCertConstants.ProductTypes.DV_SSL_CERT, StringComparison.OrdinalIgnoreCase))
 			{
+				if (organization == null)
+				{
+					throw new Exception("No organization provided in either subject or attributes, unable to enroll");
+				}
+
 				ListOrganizationsResponse organizations = client.ListOrganizations(new ListOrganizationsRequest());
 				if (organizations.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
