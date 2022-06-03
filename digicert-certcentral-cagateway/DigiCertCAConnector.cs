@@ -179,15 +179,19 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			// Process metadata fields
 			orderRequest.CustomFields = new List<MetadataField>();
-			var metadata = client.ListMetadata(new ListMetadataRequest()).MetadataFields.Where(m => m.Active).ToList();
-			Log.LogTrace($"Found {metadata.Count()} active metadata fields in the account");
-			foreach (var field in metadata)
+			var metadataResponse = client.ListMetadata(new ListMetadataRequest());
+			if (metadataResponse.MetadataFields != null && metadataResponse.MetadataFields.Count > 0)
 			{
-				// See if the field has been provided in the request
-				if (productInfo.ProductParameters.TryGetValue(field.Label, out string fieldValue))
+				var metadata = metadataResponse.MetadataFields.Where(m => m.Active).ToList();
+				Log.LogTrace($"Found {metadata.Count()} active metadata fields in the account");
+				foreach (var field in metadata)
 				{
-					Logger.Trace($"Found {field.Label} in the request, adding...");
-					orderRequest.CustomFields.Add(new MetadataField() { MetadataId = field.Id, Value = fieldValue });
+					// See if the field has been provided in the request
+					if (productInfo.ProductParameters.TryGetValue(field.Label, out string fieldValue))
+					{
+						Logger.Trace($"Found {field.Label} in the request, adding...");
+						orderRequest.CustomFields.Add(new MetadataField() { MetadataId = field.Id, Value = fieldValue });
+					}
 				}
 			}
 
