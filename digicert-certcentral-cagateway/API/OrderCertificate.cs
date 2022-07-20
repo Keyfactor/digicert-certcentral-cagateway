@@ -42,6 +42,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 
 		[JsonProperty("signature_hash")]
 		public string SignatureHash { get; set; }
+
+		[JsonProperty("ca_cert_id")]
+		public string CACertID { get; set; }
 	}
 
 	public class OrderRequest : CertCentralBaseRequest
