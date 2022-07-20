@@ -195,11 +195,15 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				}
 			}
 
+			// Get CA Cert ID (if present)
+			string cacertid = (productInfo.ProductParameters.ContainsKey("CACertId")) ? (string)productInfo.ProductParameters["CACertId"] : null;
+
 			// Set up request
 			orderRequest.Certificate.CommonName = commonName;
 			orderRequest.Certificate.CSR = csr;
 			orderRequest.Certificate.SignatureHash = signatureHash;
 			orderRequest.Certificate.DNSNames = dnsNames;
+			orderRequest.Certificate.CACertID = cacertid;
 			orderRequest.SetOrganization(organizationId);
 
 			string dcvMethod = "email";
@@ -247,7 +251,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					return EnrollForCertificate(client, orderRequest, commonName);
 
 				case EnrollmentType.Reissue:
-					return Reissue(client, productInfo, certificateDataReader, commonName, csr, dnsNames, signatureHash);
+					return Reissue(client, productInfo, certificateDataReader, commonName, csr, dnsNames, signatureHash, cacertid);
 
 				case EnrollmentType.Renew:
 					return Renew(client, orderRequest, productInfo, commonName);
@@ -828,7 +832,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="request">The <see cref="OrderRequest"/>.</param>
 		/// <param name="enrollmentProductInfo">Information about the DigiCert product this certificate uses.</param>
 		/// <returns></returns>
-		private EnrollmentResult Reissue(CertCentralClient client, EnrollmentProductInfo enrollmentProductInfo, ICertificateDataReader certificateDataReader, string commonName, string csr, List<string> dnsNames, string signatureHash)
+		private EnrollmentResult Reissue(CertCentralClient client, EnrollmentProductInfo enrollmentProductInfo, ICertificateDataReader certificateDataReader, string commonName, string csr, List<string> dnsNames, string signatureHash, string caCertId)
 		{
 			CheckProductExistence(enrollmentProductInfo.ProductID);
 
@@ -862,7 +866,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					CommonName = commonName,
 					CSR = csr,
 					DnsNames = dnsNames,
-					SignatureHash = signatureHash
+					SignatureHash = signatureHash,
+					CACertID = caCertId
 				},
 				// Setting SkipApproval to true to allow certificate id to return a value. See DigiCert documentation on Reissue API call for more info.
 				SkipApproval = true
