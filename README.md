@@ -51,14 +51,20 @@ The following sections will breakdown the required configurations for the AnyGat
 
 ## Templates
 The Template section will map the CA's products to an AD template.
-Available ProductIDs will depend on your DigiCert account's inventory
-The LifetimeDays parameter is optional and represents the certificate duration in days. If not provided, default is 365 days.
+* ```ProductID```
+This is the ID of the DigiCert product to map to the specified template. If you don't know the available product IDs in your DigiCert account, put a placeholder value here and run the Set-KeyfactorGatewayConfig cmdlet according to the AnyGateway documentation. The list of available product IDs will be returned.
+* ```LifetimeDays```
+OPTIONAL: The number of days of validity to use when requesting certs. If not provided, default is 365
+* ```CACertId```
+OPTIONAL: If your DigiCert account has multiple issuing CAs, you can specify which one to use by supplying its ID here. If not provided, no CA ID will be passed in to the DigiCert API, and the default for your account will be used.
+
  ```json
   "Templates": {
 	"WebServer": {
       "ProductID": "ssl_plus",
       "Parameters": {
 		"LifetimeDays":"365",
+        "CACertId":"123456789ABCDEF"
       }
    }
 }
