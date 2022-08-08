@@ -1,9 +1,20 @@
 # DigiCert CertCentral CA AnyGateway
-## Ca-gateway
 
 This integration allows for the Synchronization, Enrollment, and Revocation of certificates from DigiCert CertCentral.
 
-*** 
+#### Integration status: Production - Ready for use in production environments.
+
+## About the Keyfactor AnyGateway CA Connector
+
+This repository contains an AnyGateway CA Connector, which is a plugin to the Keyfactor AnyGateway. AnyGateway CA Connectors allow Keyfactor Command to be used for inventory, issuance, and revocation of certificates from a third-party certificate authority.
+
+---
+
+
+
+
+---
+
 # Introduction
 This AnyGateway plug-in enables issuance, revocation, and synchronization of certificates from DigiCert's CertCentral offering.  
 # Prerequisites
@@ -167,3 +178,4 @@ There are no specific Changes for the ServiceSettings section. Refer to the AnyG
 	"PartialScanPeriodMinutes": 240 
   }
 ```
+
