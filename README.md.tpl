@@ -36,7 +36,7 @@ In order to enroll for certificates the Keyfactor Command server must trust the 
 
 
 # Install
-* Download latest successful build from [GitHub Releases](/releases/latest)
+* Download latest successful build from [GitHub Releases](../../releases/latest)
 
 * Copy DigiCertCAProxy.dll to the Program Files\Keyfactor\Keyfactor AnyGateway directory
 
