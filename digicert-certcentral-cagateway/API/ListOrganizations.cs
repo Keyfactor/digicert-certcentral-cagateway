@@ -136,9 +136,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("container")]
 		public OrgContainer Container { get; set; }
 
-		//[JsonProperty("validations")]
-		//public List<Validation> Validations { get; set; }
-
 		[JsonProperty("ev_approvers")]
 		public List<EVApprover> EvApprovers { get; set; }
 	}

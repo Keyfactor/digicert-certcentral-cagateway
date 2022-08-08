@@ -140,38 +140,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("status")]
 		public string status { get; set; }
 
-		//[JsonProperty("is_renewal")]
-		//public bool is_renewal { get; set; }
-
-		//[JsonProperty("is_renewed")]
-		//public bool is_renewed { get; set; }
-
-		//[JsonProperty("renewed_order_id")]
-		//public int renewed_order_id { get; set; }
-
 		[JsonProperty("date_created")]
 		public DateTime? date_created { get; set; }
-
-		//[JsonProperty("organization")]
-		//public CertificateOrganization organization { get; set; }
-
-		//[JsonProperty("disable_renewal_notifications")]
-		//public bool disable_renewal_notifications { get; set; }
-
-		//[JsonProperty("container")]
-		//public IdInformation container { get; set; }
 
 		[JsonProperty("product")]
 		public Product product { get; set; }
 
 		[JsonProperty("organization_contact")]
 		public Contact organization_contact { get; set; }
-
-		//[JsonProperty("technical_contact")]
-		//public Contact technical_contact { get; set; }
-
-		//[JsonProperty("user")]
-		//public Contact user { get; set; }
 
 		[JsonProperty("requests")]
 		public List<RequestSummary> requests { get; set; }
@@ -181,39 +157,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 
 		[JsonProperty("notes")]
 		public List<OrderNote> notes { get; set; }
-
-		//[JsonProperty("receipt_id")]
-		//public int receipt_id { get; set; }
-
-		//[JsonProperty("cs_provisioning_method")]
-		//public string cs_provisioning_method { get; set; }
-
-		//[JsonProperty("send_minus_90")]
-		//public bool send_minus_90 { get; set; }
-
-		//[JsonProperty("send_minus_60")]
-		//public bool send_minus_60 { get; set; }
-
-		//[JsonProperty("send_minus_30")]
-		//public bool send_minus_30 { get; set; }
-
-		//[JsonProperty("send_minus_7")]
-		//public bool send_minus_7 { get; set; }
-
-		//[JsonProperty("send_plus_7")]
-		//public bool send_plus_7 { get; set; }
-
-		//[JsonProperty("public_id")]
-		//public string public_id { get; set; }
-
-		//[JsonProperty("allow_duplicates")]
-		//public bool allow_duplicates { get; set; }
-
-		//[JsonProperty("user_assignments")]
-		//public List<User> user_assignments { get; set; }
-
-		//[JsonProperty("payment_method")]
-		//public string payment_method { get; set; }
 
 		[JsonIgnore]
 		public string Certificate { get; set; }

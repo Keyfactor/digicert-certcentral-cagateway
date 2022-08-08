@@ -456,14 +456,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 					string strCertificate = response.Response;
 					string noHeaders = ConfigurationUtils.OnlyBase64CertContent(strCertificate);
 
-					//byte[] certBytes = Convert.FromBase64String(noHeaders);
-					//SignedCms certContainer = new SignedCms();
-					//certContainer.Decode(certBytes);
-					//X509Certificate2Collection certificateCollection = certContainer.Certificates;
-
-					//List<X509Certificate2> certFromPkcs7 = new List<X509Certificate2>(Pkcs7Helpers.GetCertsFromPkcs7(strCertificate));
-					//X509Certificate2 endCertificateFromPKCS7 = certFromPkcs7.Last();
-
 					X509Certificate2 endCertificateFromPKCS7 = new X509Certificate2(Pkcs7.NewestCertFromPkcs7(Convert.FromBase64String(noHeaders)));
 
 					byte[] certFromPkcs7_Bytes = endCertificateFromPKCS7.RawData;
