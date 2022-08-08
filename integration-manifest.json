@@ -2,6 +2,7 @@
   "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
   "integration_type": "ca-gateway",
   "name": "DigiCert CertCentral CA AnyGateway",
-  "status": "prototype",
+  "status": "production",
+  "link_github": true,
   "description": "This integration allows for the Synchronization, Enrollment, and Revocation of certificates from DigiCert CertCentral."
 }
