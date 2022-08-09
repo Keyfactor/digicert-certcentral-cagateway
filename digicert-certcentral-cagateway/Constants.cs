@@ -22,6 +22,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			public const string APIKEY = "APIKey";
 			public const string DIVISION_ID = "DivisionId";
+			public const string LIFETIME = "LifetimeDays";
+			public const string CA_CERT_ID = "CACertId";
 		}
 
 		public class RequestAttributes

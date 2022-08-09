@@ -550,6 +550,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			{
 				Log.LogInformation($"Sync skipped the following orders: {string.Join(",", skippedOrders.ToArray())}");
 			}
+			Log.LogInformation($"Sync is returning {certs.Count} certificates.");
 
 			foreach (CAConnectorCertificate record in certs)
 			{
@@ -567,11 +568,11 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			Log.MethodEntry(LogLevel.Trace);
 			List<string> errors = new List<string>();
 
-			Log.LogTrace("Checking the API Admin Key.");
+			Log.LogTrace("Checking the API Key.");
 			string apiKey = connectionInfo.ContainsKey(DigiCertConstants.Config.APIKEY) ? (string)connectionInfo[DigiCertConstants.Config.APIKEY] : string.Empty;
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
-				errors.Add("The API Admin Key is required.");
+				errors.Add("The API Key is required.");
 			}
 
 			CertCentralClient digiClient = new CertCentralClient(apiKey);
@@ -716,7 +717,21 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <returns></returns>
 		public Dictionary<string, PropertyConfigInfo> GetTemplateParameterAnnotations()
 		{
-			throw new NotImplementedException();
+			return new Dictionary<string, PropertyConfigInfo>()
+			{
+				[DigiCertConstants.Config.LIFETIME] = new PropertyConfigInfo()
+				{
+					Comments = "OPTIONAL: The number of days of validity to use when requesting certs. If not provided, default is 365.",
+					Hidden = false,
+					DefaultValue = "365"
+				},
+				[DigiCertConstants.Config.CA_CERT_ID] = new PropertyConfigInfo()
+				{
+					Comments = "OPTIONAL: ID of issuing CA to use by DigiCert. If not provided, the default for your account will be used.",
+					Hidden = false,
+					DefaultValue = ""
+				}
+			};
 		}
 
 		/// <summary>
