@@ -10,6 +10,7 @@ In the installed programs list on the gateway machine, if the install is listed 
 
 ## Migration From 20.1.x or Earlier
 If you are upgrading from an older version of the DigiCert gateway that still used the GUI configuration wizard (20.1.x or earlier), you first have to do an upgrade to DigiCert version 21.x to migrate your database to SQL.
+IMPORTANT NOTE: This database migration is REQUIRED if you are using Keyfactor Command as well, otherwise the database IDs will not match up and your gateway will not sync properly.
 After doing that upgrade, follow the below steps to migrate from 21.x to the current version.
 
 ## Migration from 21.3.2 or Earlier
