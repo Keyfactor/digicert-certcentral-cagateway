@@ -244,7 +244,41 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				orderRequest.ValidityYears = validityYears;
 			}
 
+			// Check if the order has more validity in it (multi-year cert). If so, do a reissue instead of a renew
+			if (enrollmentType == EnrollmentType.Renew)
+			{
+				// Get the old cert so we can properly construct the request.
+				string priorCertSnString = productInfo.ProductParameters[CAProxy.AnyGateway.Constants.Attribute.PRIOR_CERT_SN];
+				Logger.Trace($"Attempting to retrieve the certificate with serial number {priorCertSnString}.");
+				byte[] priorCertSn = DataConversion.HexToBytes(priorCertSnString);
+				CAConnectorCertificate anyGatewayCertificate = certificateDataReader.GetCertificateRecord(priorCertSn);
+				if (anyGatewayCertificate == null)
+				{
+					throw new Exception($"No certificate with serial number '{priorCertSnString}' could be found.");
+				}
+
+				// Get order ID
+				Logger.Trace("Attempting to parse the order ID from the AnyGateway certificate.");
+				uint orderId = 0;
+				try
+				{
+					orderId = uint.Parse(anyGatewayCertificate.CARequestID.Split('-').First());
+				}
+				catch (Exception e)
+				{
+					throw new Exception($"There was an error parsing the order ID from the certificate: {e.Message}", e);
+				}
+
+				ViewCertificateOrderResponse certOrder = client.ViewCertificateOrder(new ViewCertificateOrderRequest(orderId));
+
+				if (certOrder.order_valid_till.HasValue && certOrder.order_valid_till.Value.AddDays(-90) > DateTime.UtcNow)
+				{
+					enrollmentType = EnrollmentType.Reissue;
+				}
+			}
+
 			Log.LogTrace("Making request to Enroll");
+
 			switch (enrollmentType)
 			{
 				case EnrollmentType.New:
