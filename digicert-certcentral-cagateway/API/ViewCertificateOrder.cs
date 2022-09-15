@@ -143,6 +143,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("date_created")]
 		public DateTime? date_created { get; set; }
 
+		[JsonProperty("order_valid_till")]
+		public DateTime? order_valid_till { get; set; }
+
 		[JsonProperty("product")]
 		public Product product { get; set; }
 

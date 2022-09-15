@@ -9,3 +9,6 @@ Added support for CSRs with empty subjects, first DNS SAN will be used as the Co
 
 1.1.2
 Added support for specifying the issuing CA cert ID as part of the product/template definition
+
+1.2.0
+Added support for renewing multi-year orders.
