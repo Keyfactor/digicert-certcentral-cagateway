@@ -11,5 +11,4 @@ Added support for CSRs with empty subjects, first DNS SAN will be used as the Co
 Added support for specifying the issuing CA cert ID as part of the product/template definition
 
 1.2.0
-Added support for multi-year orders. 
-When renewing a certificate, if there is additional validity on the order, the renewal will be converted to a reissue and consume what remains of the validity on the order.
+Added support for renewing multi-year orders.
