@@ -17,7 +17,21 @@ This repository contains an AnyGateway CA Connector, which is a plugin to the Ke
 
 # Introduction
 This AnyGateway plug-in enables issuance, revocation, and synchronization of certificates from DigiCert's CertCentral offering.  
-# Prerequisites
+
+# Important DigiCert Notes
+
+## Multi-Year Orders
+Due to industry changes, certificates can no longer have a total validity of greater than around 13 months.
+DigiCert does offer multi-year orders, where you will be issued a certificate that's good for one year, after which you can reissue it for another year.
+Currently, the DigiCert CertCentral Gateway does not support new enrollments for multi-year orders. It does, however, support reissuing existing multi-year orders.
+If a renewal request is received by the Gateway, and there are 90 days or more remaining on the validity period of the underlying order, the Gateway will convert the renewal request into a reissue request, allowing it to consume the additional order validity without triggering a new purchase.
+
+The validity period of the resulting certificate will be the SHORTER of:
+1. The remaining validity period on the underlying order
+2. The maximum standard certificate validity (currently defined as 397 days)
+
+
+# Prerequisites for Installation
 
 ## AnyGateway Platform Minimum Version
 The DigiCert CertCentral AnyGateway requires the Keyfactor AnyGateway v21.5.1 or newer
