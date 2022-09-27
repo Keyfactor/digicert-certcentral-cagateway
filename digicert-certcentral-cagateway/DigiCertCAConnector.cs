@@ -121,12 +121,13 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			// Parse subject
 			X509Name subjectParsed = null;
-			string commonName = null, organization = null;
+			string commonName = null, organization = null, orgUnit = null;
 			try
 			{
 				subjectParsed = new X509Name(subject);
 				commonName = subjectParsed.GetValueList(X509Name.CN).Cast<string>().LastOrDefault();
 				organization = subjectParsed.GetValueList(X509Name.O).Cast<string>().LastOrDefault();
+				orgUnit = subjectParsed.GetValueList(X509Name.OU).Cast<string>().LastOrDefault();
 			}
 			catch (Exception) { }
 
@@ -205,6 +206,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			orderRequest.Certificate.DNSNames = dnsNames;
 			orderRequest.Certificate.CACertID = cacertid;
 			orderRequest.SetOrganization(organizationId);
+			if (!string.IsNullOrEmpty(orgUnit))
+			{
+				List<string> ous = new List<string>
+				{
+					orgUnit
+				};
+				orderRequest.Certificate.OrganizationUnits = ous;
+			}
 
 			string dcvMethod = "email";
 
