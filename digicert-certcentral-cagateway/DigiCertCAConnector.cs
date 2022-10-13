@@ -297,7 +297,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					return Reissue(client, productInfo, certificateDataReader, commonName, csr, dnsNames, signatureHash, cacertid);
 
 				case EnrollmentType.Renew:
-					return Renew(client, orderRequest, productInfo, commonName);
+					return Renew(client, orderRequest, productInfo, certificateDataReader, commonName);
 
 				default:
 					throw new Exception($"The enrollment type '{enrollmentType}' is invalid for the DigiCert gateway.");
@@ -875,11 +875,33 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <param name="request">The <see cref="OrderRequest"/>.</param>
 		/// <param name="enrollmentProductInfo">Information about the DigiCert product this certificate uses.</param>
 		/// <returns></returns>
-		private EnrollmentResult Renew(CertCentralClient client, OrderRequest request, EnrollmentProductInfo enrollmentProductInfo, string commonName)
+		private EnrollmentResult Renew(CertCentralClient client, OrderRequest request, EnrollmentProductInfo enrollmentProductInfo, ICertificateDataReader certificateDataReader, string commonName)
 		{
 			CheckProductExistence(enrollmentProductInfo.ProductID);
 
-			Logger.Trace("Attempting to renew certificate.");
+			string priorCertSnString = enrollmentProductInfo.ProductParameters[CAProxy.AnyGateway.Constants.Attribute.PRIOR_CERT_SN];
+			Logger.Trace($"Attempting to retrieve certificate with serial number {priorCertSnString} from database.");
+			byte[] priorCertSn = DataConversion.HexToBytes(priorCertSnString);
+			CAConnectorCertificate dbCert = certificateDataReader.GetCertificateRecord(priorCertSn);
+			if (dbCert == null)
+			{
+				throw new Exception($"No certificate with serial number '{priorCertSnString}' could be found to renew.");
+			}
+
+			int orderId = 0;
+			Logger.Trace("Parsing the order ID from the database certificate.");
+			try
+			{
+				orderId = int.Parse(dbCert.CARequestID.Split('-').First());
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"There was an error parsing the order ID from the certificate: {e.Message}", e);
+			}
+
+			request.RenewalOfOrderId = orderId;
+
+			Logger.Trace($"Attempting to renew certificate with order id {orderId}.");
 			return ExtractEnrollmentResult(client, client.OrderCertificate(request, true), commonName);
 		}
 
