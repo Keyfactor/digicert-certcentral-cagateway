@@ -11,5 +11,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 	{
 		public string APIKey { get; set; }
 		public int? DivisionId { get; set; }
+		public bool? RevokeCertificateOnly { get; set; }
 	}
 }

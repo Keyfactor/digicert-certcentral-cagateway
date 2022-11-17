@@ -327,7 +327,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return reissueResponse;
 		}
 
-		[Obsolete("This API endpoint does not seem to work correctly. Use the overload that takes 'RevokeCertificateByOrderRequest'")]
 		public RevokeCertificateResponse RevokeCertificate(RevokeCertificateRequest request)
 		{
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
