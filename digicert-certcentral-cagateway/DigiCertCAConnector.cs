@@ -421,17 +421,15 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
 			}
 
-			ViewCertificateOrderResponse secondOrderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
-			RequestSummary requestSummary = secondOrderResponse.requests.FirstOrDefault(x => x.type.Equals("revoke") && x.status.Equals("pending"));
-			UpdateRequestStatusResponse updateRequest = new UpdateRequestStatusResponse();
-			if (requestSummary != null)
+			if (revokeResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 			{
-				updateRequest = client.UpdateRequestStatus(new UpdateRequestStatusRequest(requestSummary.id) { Status = "approved" });
+				string errMsg = $"Unable to revoke certificate {caRequestID}. Error(s): {string.Join(";", revokeResponse.Errors)}";
+				Log.LogError(errMsg);
+				throw new Exception(errMsg);
 			}
-			else
-			{
-				Log.LogWarning($"No pending revocation found for Order {orderId}. Order may not have been revoked successfully");
-			}
+
+			var updateRequest = client.UpdateRequestStatus(new UpdateRequestStatusRequest(revokeResponse.request_id) { Status = "approved" });
+
 			CAConnectorCertificate revokedCert = GetSingleRecord(caRequestID);
 			Log.MethodExit(LogLevel.Trace);
 			return revokedCert.Status;
