@@ -395,7 +395,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			Log.MethodEntry(LogLevel.Trace);
 			int orderId = Int32.Parse(caRequestID.Substring(0, caRequestID.IndexOf('-')));
-			string certId = caRequestID.Substring(caRequestID.IndexOf('-') + 1);
+			int certId = Int32.Parse(caRequestID.Substring(caRequestID.IndexOf('-') + 1));
 			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
 			ViewCertificateOrderResponse orderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
 			if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR || orderResponse.status.ToLower() != "issued")
@@ -411,7 +411,15 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				req = request_temp.comments.Replace("CERTIFICATE_REQUESTOR:", "").Trim();
 			}
 			Log.LogTrace("Making request to Revoke");
-			RevokeCertificateResponse revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
+			RevokeCertificateResponse revokeResponse;
+			if (Config.RevokeCertificateOnly.HasValue && Config.RevokeCertificateOnly.Value)
+			{
+				revokeResponse = client.RevokeCertificate(new RevokeCertificateRequest(certId) { comments = Conversions.RevokeReasonToString(revocationReason) });
+			}
+			else
+			{
+				revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
+			}
 
 			ViewCertificateOrderResponse secondOrderResponse = client.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)orderId));
 			RequestSummary requestSummary = secondOrderResponse.requests.FirstOrDefault(x => x.type.Equals("revoke") && x.status.Equals("pending"));
