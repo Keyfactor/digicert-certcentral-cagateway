@@ -317,6 +317,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			string[] idParts = caRequestId.Split('-');
 			int orderId = Int32.Parse(idParts.First());
 			string certId = idParts.Last();
+			int certIdInt = Int32.Parse(certId);
 
 			// Get status of cert and the cert itself from Digicert
 			CertCentralClient client = CertCentralClientUtilities.BuildCertCentralClient(Config);
@@ -328,9 +329,29 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				Log.LogInformation(errorMessage);
 				throw new COMException(errorMessage, HRESULTs.PROP_NOT_FOUND);
 			}
+			List<StatusOrder> reissueCerts = GetReissues(client, orderId);
+			List<StatusOrder> dupeCerts = GetDuplicates(client, orderId);
+			StatusOrder primary = new StatusOrder
+			{
+				order_id = orderId,
+				certificate_id = orderResponse.certificate.id,
+				status = orderResponse.status
+			};
+			List<StatusOrder> orderCerts = new List<StatusOrder>();
+			orderCerts.Add(primary);
+			if (reissueCerts?.Count > 0)
+			{
+				orderCerts.AddRange(reissueCerts);
+			}
+			if (dupeCerts?.Count > 0)
+			{
+				orderCerts.AddRange(dupeCerts);
+			}
+
+			StatusOrder certToCheck = orderCerts.Where(c => c.certificate_id == certIdInt).First();
 
 			string certificate = null;
-			int status = GetCertificateStatusFromCA(orderResponse);
+			int status = GetCertificateStatusFromCA(certToCheck.status);
 			if (status == (int)RequestDisposition.ISSUED || status == (int)RequestDisposition.REVOKED || status == (int)RequestDisposition.UNKNOWN)
 			{
 				// We have a status where there may be a cert to download, try to download it
@@ -423,7 +444,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			if (revokeResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 			{
-				string errMsg = $"Unable to revoke certificate {caRequestID}. Error(s): {string.Join(";", revokeResponse.Errors)}";
+				string errMsg = $"Unable to revoke certificate {caRequestID}. Error(s): {string.Join(";", revokeResponse.Errors.Select(e => e.message))}";
 				Log.LogError(errMsg);
 				throw new Exception(errMsg);
 			}
@@ -499,6 +520,11 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 							status = certDetails.status
 						};
 						certsToSync.Add(fullCert);
+						var reissues = GetReissues(digiClient, certDetails.id);
+						if (reissues?.Count > 0)
+						{
+							certsToSync.AddRange(reissues);
+						}
 						if (certDetails.has_duplicates)
 						{
 							certsToSync.AddRange(GetDuplicates(digiClient, certDetails.id));
@@ -522,6 +548,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					for (int i = 0; i < orderCount; i++)
 					{
 						cancelToken.ThrowIfCancellationRequested();
+
+						var reissueCerts = GetReissues(digiClient, statusResponse.orders[i].order_id);
+						if (reissueCerts?.Count > 0)
+						{
+							certsToSync.AddRange(reissueCerts);
+						}
 
 						List<StatusOrder> dupeCerts = GetDuplicates(digiClient, statusResponse.orders[i].order_id);
 						if (dupeCerts?.Count > 0)
@@ -797,9 +829,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			throw new NotImplementedException();
 		}
 
-		public int GetCertificateStatusFromCA(ViewCertificateOrderResponse oCertificateOrderResponse)
+		public int GetCertificateStatusFromCA(string status)
 		{
-			switch (oCertificateOrderResponse.status)
+			switch (status)
 			{
 				case "issued":
 					return (int)RequestDisposition.ISSUED;
@@ -996,7 +1028,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					throw new UnsuccessfulRequestException(errorMessage, unchecked((uint)HRESULTs.BAD_REQUEST_STATUS));
 				}
 
-				status = GetCertificateStatusFromCA(certificateOrderResponse);
+				status = GetCertificateStatusFromCA(certificateOrderResponse.status);
 
 				// Get cert from response
 				if (orderResponse.CertificateChain != null)
@@ -1142,6 +1174,34 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			return dupeCerts;
+		}
+
+		private List<StatusOrder> GetReissues(CertCentralClient digiClient, int orderId)
+		{
+			Logger.Trace($"Getting Reissues for order {orderId}");
+			List<StatusOrder> reissueCerts = new List<StatusOrder>();
+			ListReissueResponse reissueResponse = digiClient.ListReissues(new ListReissueRequest(orderId));
+			if (reissueResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
+			{
+				Error error = reissueResponse.Errors[0];
+				Logger.Error($"Error in retrieving reissues for order {orderId}");
+				throw new Exception($"DigiCert CertCentral Web Service returned {error.code} - {error.message} to retrieve all rows");
+			}
+			if (reissueResponse.certificates?.Count > 0)
+			{
+				foreach (CertificateOrder reissueCert in reissueResponse.certificates)
+				{
+					StatusOrder reissueStatusOrder = new StatusOrder
+					{
+						order_id = orderId,
+						certificate_id = reissueCert.id,
+						status = reissueCert.status
+					};
+					reissueCerts.Add(reissueStatusOrder);
+				}
+			}
+
+			return reissueCerts;
 		}
 
 		#endregion Helpers
