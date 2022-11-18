@@ -92,6 +92,7 @@
     <Compile Include="API\DownloadCertificateByFormat.cs" />
     <Compile Include="API\Error.cs" />
     <Compile Include="API\ListCertificateOrders.cs" />
+    <Compile Include="API\ListReissues.cs" />
     <Compile Include="API\ListMetadata.cs" />
     <Compile Include="API\ListContainers.cs" />
     <Compile Include="API\ListDomains.cs" />
