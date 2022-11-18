@@ -255,6 +255,26 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return duplicatesResponse;
 		}
 
+		public ListReissueResponse ListReissues(ListReissueRequest reissueRequest)
+		{
+			CertCentralResponse ccResponse = Request(reissueRequest);
+
+			ListReissueResponse reissueResponse = new ListReissueResponse();
+
+			if (IsError(ccResponse.Response, reissueResponse.ContentType))
+			{
+				Errors errors = JsonConvert.DeserializeObject<Errors>(ccResponse.Response);
+				reissueResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
+				reissueResponse.Errors = errors.errors;
+			}
+			else
+			{
+				reissueResponse = JsonConvert.DeserializeObject<ListReissueResponse>(ccResponse.Response);
+			}
+
+			return reissueResponse;
+		}
+
 		public ListRequestsResponse ListRequests(ListRequestsRequest request)
 		{
 			CertCentralResponse response = Request(request, request.BuildParameters());
@@ -327,7 +347,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return reissueResponse;
 		}
 
-		[Obsolete("This API endpoint does not seem to work correctly. Use the overload that takes 'RevokeCertificateByOrderRequest'")]
 		public RevokeCertificateResponse RevokeCertificate(RevokeCertificateRequest request)
 		{
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));

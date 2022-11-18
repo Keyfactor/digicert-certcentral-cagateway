@@ -81,7 +81,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 	public class RevokeCertificateResponse : CertCentralBaseResponse
 	{
 		[JsonProperty("id")]
-		public int order_id { get; set; }
+		public int request_id { get; set; }
 
 		[JsonProperty("date")]
 		public DateTime date { get; set; }
