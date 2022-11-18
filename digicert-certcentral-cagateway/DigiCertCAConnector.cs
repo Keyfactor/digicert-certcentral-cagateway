@@ -351,7 +351,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			StatusOrder certToCheck = orderCerts.Where(c => c.certificate_id == certIdInt).First();
 
 			string certificate = null;
-			int status = GetCertificateStatusFromCA(certToCheck.status);
+			int status = GetCertificateStatusFromCA(certToCheck.status, orderId);
 			if (status == (int)RequestDisposition.ISSUED || status == (int)RequestDisposition.REVOKED || status == (int)RequestDisposition.UNKNOWN)
 			{
 				// We have a status where there may be a cert to download, try to download it
@@ -829,7 +829,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			throw new NotImplementedException();
 		}
 
-		public int GetCertificateStatusFromCA(string status)
+		public int GetCertificateStatusFromCA(string status, int orderId)
 		{
 			switch (status)
 			{
@@ -847,11 +847,11 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					return (int)RequestDisposition.REVOKED;
 
 				case "needs_approval": // This indicates that the request has to be approved through DigiCert, which is a misconfiguration
-					Logger.Warn($"Order {oCertificateOrderResponse.id} needs to be approved in the DigiCert portal prior to issuance");
+					Logger.Warn($"Order {orderId} needs to be approved in the DigiCert portal prior to issuance");
 					return (int)RequestDisposition.EXTERNAL_VALIDATION;
 
 				default:
-					Logger.Warn($"Order {oCertificateOrderResponse.id} has unexpected status {oCertificateOrderResponse.status}");
+					Logger.Warn($"Order {orderId} has unexpected status {status}");
 					return (int)RequestDisposition.UNKNOWN;
 			}
 		}
@@ -1028,7 +1028,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					throw new UnsuccessfulRequestException(errorMessage, unchecked((uint)HRESULTs.BAD_REQUEST_STATUS));
 				}
 
-				status = GetCertificateStatusFromCA(certificateOrderResponse.status);
+				status = GetCertificateStatusFromCA(certificateOrderResponse.status, (int)orderID);
 
 				// Get cert from response
 				if (orderResponse.CertificateChain != null)
