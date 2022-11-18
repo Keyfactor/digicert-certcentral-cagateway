@@ -27,6 +27,10 @@ The validity period of the resulting certificate will be the SHORTER of:
 1. The remaining validity period on the underlying order
 2. The maximum standard certificate validity (currently defined as 397 days)
 
+## Revocation
+By default, revocation through DigiCert revokes the entire order, not just the individual certificate. The RevokeCertificateOnly property (see below) can be used to change that behavior.
+However, if setting RevokeCertificateOnly to true, see the [notes from DigiCert here](https://dev.digicert.com/en/certcentral-apis/services-api/certificates/revoke-certificate.html#what-happens-if-i-revoke-a-certificate-on-an-order-with-only-a-single-certificate-) on how that will change the behavior of your account. 
+
 
 # Prerequisites for Installation
 
@@ -105,30 +109,30 @@ The security section does not change specifically for the DigiCert CA Gateway.  
 	ADMINISTRATOR: Configure/reconfigure the gateway.
 	Valid permission settings are "Allow", "None", and "Deny".*/
     "Security": {
-        "Keyfactor\\Administrator": {
-            "READ": "Allow",
-            "ENROLL": "Allow",
-            "OFFICER": "Allow",
-            "ADMINISTRATOR": "Allow"
-        },
-        "Keyfactor\\gateway_test": {
-            "READ": "Allow",
-            "ENROLL": "Allow",
-            "OFFICER": "Allow",
-            "ADMINISTRATOR": "Allow"
-        },		
-        "Keyfactor\\SVC_TimerService": {
-            "READ": "Allow",
-            "ENROLL": "Allow",
-            "OFFICER": "Allow",
-            "ADMINISTRATOR": "None"
-        },
-        "Keyfactor\\SVC_AppPool": {
-            "READ": "Allow",
-            "ENROLL": "Allow",
-            "OFFICER": "Allow",
-            "ADMINISTRATOR": "Allow"
-        }
+		"Keyfactor\\Administrator": {
+			"READ": "Allow",
+			"ENROLL": "Allow",
+			"OFFICER": "Allow",
+			"ADMINISTRATOR": "Allow"
+		},
+		"Keyfactor\\gateway_test": {
+			"READ": "Allow",
+			"ENROLL": "Allow",
+			"OFFICER": "Allow",
+			"ADMINISTRATOR": "Allow"
+		},		
+		"Keyfactor\\SVC_TimerService": {
+			"READ": "Allow",
+			"ENROLL": "Allow",
+			"OFFICER": "Allow",
+			"ADMINISTRATOR": "None"
+		},
+		"Keyfactor\\SVC_AppPool": {
+			"READ": "Allow",
+			"ENROLL": "Allow",
+			"OFFICER": "Allow",
+			"ADMINISTRATOR": "Allow"
+		}
     }
 ```
 ## CerificateManagers
@@ -138,7 +142,7 @@ The Certificate Managers section is optional.
 	Uses "<All>" to specify all templates. Uses "Everyone" to specify all requesters.
 	Valid permission values are "Allow" and "Deny".
 ```json
-  "CertificateManagers":{
+	"CertificateManagers":{
 		"DOMAIN\\Username":{
 			"Templates":{
 				"MyTemplateShortName":{
@@ -163,33 +167,36 @@ This is the API key to use to connect to the DigiCert API.
 * ```DivisionId```
 OPTIONAL: If your CertCentral account has multiple divisions AND uses any custom per-division product settings, provide a DivisionId for the gateway to use for enrollment calls. Otherwise, omit this configuration field.
 NOTE: The division ID is currently only used for product lookups, this will not impact any other gateway functionality currently.
+* ```RevokeCertificateOnly```
+OPTIONAL: By default, when you revoke a certificate through DigiCert, it revokes it by order number, so orders with multiple certificates all get revoked. If you wish to only revoke single certificates, set this property to true.
 
 ```json
-  "CAConnection": {
-	"APIKey" : "DigiCert API Key",
-    "DivisionId": "12345"
-  },
+	"CAConnection": {
+		"APIKey" : "DigiCert API Key",
+		"DivisionId": "12345",
+		"RevokeCertificateOnly": false
+	},
 ```
 ## GatewayRegistration
 There are no specific Changes for the GatewayRegistration section. Refer to the AnyGateway Documentation for more detail.
 ```json
-  "GatewayRegistration": {
-    "LogicalName": "DigiCertCASandbox",
-    "GatewayCertificate": {
-      "StoreName": "CA",
-      "StoreLocation": "LocalMachine",
-      "Thumbprint": "0123456789abcdef"
-    }
-  }
+	"GatewayRegistration": {
+		"LogicalName": "DigiCertCASandbox",
+		"GatewayCertificate": {
+			"StoreName": "CA",
+			"StoreLocation": "LocalMachine",
+			"Thumbprint": "0123456789abcdef"
+		}
+	}
 ```
 
 ## ServiceSettings
 There are no specific Changes for the ServiceSettings section. Refer to the AnyGateway Documentation for more detail.
 ```json
-  "ServiceSettings": {
-    "ViewIdleMinutes": 8,
-    "FullScanPeriodHours": 24,
-	"PartialScanPeriodMinutes": 240 
-  }
+	"ServiceSettings": {
+		"ViewIdleMinutes": 8,
+		"FullScanPeriodHours": 24,
+		"PartialScanPeriodMinutes": 240 
+	}
 ```
 
