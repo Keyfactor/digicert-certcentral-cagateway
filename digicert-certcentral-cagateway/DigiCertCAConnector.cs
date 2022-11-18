@@ -335,7 +335,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			{
 				order_id = orderId,
 				certificate_id = orderResponse.certificate.id,
-				status = orderResponse.status
+				status = orderResponse.certificate.status
 			};
 			List<StatusOrder> orderCerts = new List<StatusOrder>();
 			orderCerts.Add(primary);
