@@ -430,9 +430,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			var updateRequest = client.UpdateRequestStatus(new UpdateRequestStatusRequest(revokeResponse.request_id) { Status = "approved" });
 
-			CAConnectorCertificate revokedCert = GetSingleRecord(caRequestID);
 			Log.MethodExit(LogLevel.Trace);
-			return revokedCert.Status;
+			if (updateRequest.Status == CertCentralBaseResponse.StatusType.ERROR)
+			{
+				string errMsg = $"Unable to approve revocation request. Manual approval through the DigiCert portal required. Verify that the gateway API key has administrator rights for future revocations.";
+				Log.LogError(errMsg);
+				throw new Exception(errMsg);
+			}
+			return (int)RequestDisposition.REVOKED;
 		}
 
 		/// <summary>
