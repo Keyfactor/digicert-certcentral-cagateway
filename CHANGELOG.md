@@ -18,3 +18,6 @@ Fixed an issue where OU was not properly being passed in to the DigiCert API
 
 1.2.2
 Fixed an issue where renewals were not properly getting tagged with the previous order ID in DigiCert
+
+1.3.0
+Added a config option to allow for revoking a single cert, instead of the entire order

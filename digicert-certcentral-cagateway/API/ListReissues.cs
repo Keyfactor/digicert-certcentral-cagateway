@@ -5,12 +5,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-namespace Keyfactor.Extensions.AnyGateway.DigiCert
+using Newtonsoft.Json;
+
+using System.Collections.Generic;
+
+namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 {
-	public class DigiCertCAConfig
+	public class ListReissueRequest : CertCentralBaseRequest
 	{
-		public string APIKey { get; set; }
-		public int? DivisionId { get; set; }
-		public bool? RevokeCertificateOnly { get; set; }
+		public ListReissueRequest(int orderId)
+		{
+			this.Resource = $"services/v2/order/certificate/{orderId}/reissue";
+			this.Method = "GET";
+		}
+	}
+
+	public class ListReissueResponse : CertCentralBaseResponse
+	{
+		[JsonProperty("certificates")]
+		public List<CertificateOrder> certificates { get; set; }
 	}
 }
