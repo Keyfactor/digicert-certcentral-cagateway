@@ -145,6 +145,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 							using (var reader = new StreamReader(errorResponse.GetResponseStream()))
 							{
 								string errorString = reader.ReadToEnd();
+								oCertCertResponse.Success = false;
 								oCertCertResponse.Response = errorString;
 								Logger.LogTrace($"CertCentral CA (Request ID: {reqID}) has returned Response '{errorResponse.StatusCode}: {errorString}");
 							}
@@ -166,26 +167,13 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return oCertCertResponse;
 		}
 
-		private bool IsError(string response, CertCentralBaseResponse.ContentTypes eType)
-		{
-			switch (eType)
-			{
-				case CertCentralBaseResponse.ContentTypes.JSON:
-					if (response.Contains("errors"))
-						return true;
-					break;
-			}
-
-			return false;
-		}
-
 		public ListOrganizationsResponse ListOrganizations(ListOrganizationsRequest request)
 		{
 			CertCentralResponse response = Request(request, request.BuildParameters());
 
 			ListOrganizationsResponse listOrganizationsResponse = new ListOrganizationsResponse();
 
-			if (IsError(response.Response, listOrganizationsResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				listOrganizationsResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -203,7 +191,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListDomainsResponse listDomainsResponse = new ListDomainsResponse();
 
-			if (IsError(response.Response, listDomainsResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				listDomainsResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -221,7 +209,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListContainersResponse listContainersResponse = new ListContainersResponse();
 
-			if (IsError(response.Response, listContainersResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				listContainersResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -241,7 +229,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListDuplicatesResponse duplicatesResponse = new ListDuplicatesResponse();
 
-			if (IsError(ccResponse.Response, duplicatesResponse.ContentType))
+			if (!ccResponse.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(ccResponse.Response);
 				duplicatesResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -261,7 +249,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListReissueResponse reissueResponse = new ListReissueResponse();
 
-			if (IsError(ccResponse.Response, reissueResponse.ContentType))
+			if (!ccResponse.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(ccResponse.Response);
 				reissueResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -281,7 +269,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListRequestsResponse listRequestsResponse = new ListRequestsResponse();
 
-			if (IsError(response.Response, listRequestsResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				listRequestsResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -299,7 +287,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			ListMetadataResponse listMetadataResponse = new ListMetadataResponse();
 
-			if (IsError(response.Response, listMetadataResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				listMetadataResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -316,7 +304,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), adminUser);
 
 			OrderResponse orderResponse = new OrderResponse();
-			if (IsError(response.Response, orderResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				orderResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -333,7 +321,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), adminUser);
 
 			OrderResponse reissueResponse = new OrderResponse();
-			if (IsError(response.Response, reissueResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				reissueResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -352,7 +340,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
 			RevokeCertificateResponse revokeOrderResponse = new RevokeCertificateResponse();
-			if (IsError(response.Response, revokeOrderResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				revokeOrderResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -369,7 +357,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
 			RevokeCertificateResponse revokeOrderResponse = new RevokeCertificateResponse();
-			if (IsError(response.Response, revokeOrderResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				revokeOrderResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -386,7 +374,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, JsonConvert.SerializeObject(request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
 
 			UpdateRequestStatusResponse updateRequestResponse = new UpdateRequestStatusResponse();
-			if (IsError(response.Response, updateRequestResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				updateRequestResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -409,7 +397,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertCentralResponse response = Request(request, "");
 
 			DVCheckDCVResponse checkDCVResponse = new DVCheckDCVResponse();
-			if (IsError(response.Response, checkDCVResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				checkDCVResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -427,7 +415,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		{
 			CertCentralResponse response = Request(request);
 			CertificateChainResponse chainResponse = new CertificateChainResponse();
-			if (IsError(response.Response, chainResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				chainResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -445,7 +433,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		{
 			CertCentralResponse certResponse = Request(request);
 			StatusChangesResponse statusChangeResponse = new StatusChangesResponse();
-			if (IsError(certResponse.Response, statusChangeResponse.ContentType))
+			if (!certResponse.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(certResponse.Response);
 				statusChangeResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -462,7 +450,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 		{
 			CertCentralResponse response = Request(request, "");
 			DownloadCertificateByFormatResponse dlCertificateRequestResponse = new DownloadCertificateByFormatResponse();
-			if (IsError(response.Response, dlCertificateRequestResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				dlCertificateRequestResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -507,7 +495,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 				CertCentralResponse response = Request(request, request.BuildParameters());
 
 				ListCertificateOrdersResponse listCertificateResponse = new ListCertificateOrdersResponse();
-				if (IsError(response.Response, listCertificateResponse.ContentType))
+				if (!response.Success)
 				{
 					Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 					listCertificateResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -533,7 +521,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 
 			CertCentralResponse response = Request(request);
 
-			if (IsError(response.Response, viewCertResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				viewCertResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -558,7 +546,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertificateTypeDetailsResponse detailsResponse = new CertificateTypeDetailsResponse();
 			CertCentralResponse response = Request(detailsRequest, detailsRequest.BuildParameters());
 
-			if (IsError(response.Response, detailsResponse.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				detailsResponse.Status = CertCentralBaseResponse.StatusType.ERROR;
@@ -582,7 +570,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			CertificateTypesResponse allTypes = new CertificateTypesResponse();
 			CertCentralResponse response = Request(typesRequest);
 
-			if (IsError(response.Response, allTypes.ContentType))
+			if (!response.Success)
 			{
 				Errors errors = JsonConvert.DeserializeObject<Errors>(response.Response);
 				allTypes.Status = CertCentralBaseResponse.StatusType.ERROR;
