@@ -331,11 +331,13 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 			List<StatusOrder> reissueCerts = GetReissues(client, orderId);
 			List<StatusOrder> dupeCerts = GetDuplicates(client, orderId);
+
+			var orderStatusString = (string.IsNullOrEmpty(orderResponse.certificate.status)) ? orderResponse.status : orderResponse.certificate.status;
 			StatusOrder primary = new StatusOrder
 			{
 				order_id = orderId,
 				certificate_id = orderResponse.certificate.id,
-				status = orderResponse.certificate.status
+				status = orderStatusString
 			};
 			List<StatusOrder> orderCerts = new List<StatusOrder>();
 			orderCerts.Add(primary);
