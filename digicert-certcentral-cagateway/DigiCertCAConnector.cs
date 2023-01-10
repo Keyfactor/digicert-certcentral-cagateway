@@ -836,8 +836,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			switch (status)
 			{
 				case "issued":
+				case "approved":
 					return (int)RequestDisposition.ISSUED;
 
+				case "processing":
 				case "reissue_pending":
 				case "pending": // Pending from DigiCert means it will be issued after validation
 					return (int)RequestDisposition.EXTERNAL_VALIDATION;
