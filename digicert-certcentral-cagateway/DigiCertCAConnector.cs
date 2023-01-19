@@ -837,6 +837,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			{
 				case "issued":
 				case "approved":
+				case "expired":
 					return (int)RequestDisposition.ISSUED;
 
 				case "processing":
