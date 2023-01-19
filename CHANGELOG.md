@@ -21,3 +21,6 @@ Fixed an issue where renewals were not properly getting tagged with the previous
 
 1.3.0
 Added a config option to allow for revoking a single cert, instead of the entire order
+
+1.3.2
+Fixed an issue where status of some certs was being returned as Unknown
