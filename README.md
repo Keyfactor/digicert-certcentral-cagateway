@@ -82,10 +82,15 @@ The Template section will map the CA's products to an AD template.
 This is the ID of the DigiCert product to map to the specified template. If you don't know the available product IDs in your DigiCert account, put a placeholder value here and run the Set-KeyfactorGatewayConfig cmdlet according to the AnyGateway documentation. The list of available product IDs will be returned.
 * ```LifetimeDays```
 OPTIONAL: The number of days of validity to use when requesting certs. If not provided, default is 365
+
 **NOTE FOR RENEWALS**
 If the LifetimeDays value is evenly divisible by 365, when a certificate is renewed, the new certificate's expiration date will be the same month and day as the original certificate (assuming you are renewing close enough to expiration that the new expiration date fits within the maximum validity)
 * ```CACertId```
 OPTIONAL: If your DigiCert account has multiple issuing CAs, you can specify which one to use by supplying its ID here. If not provided, no CA ID will be passed in to the DigiCert API, and the default for your account will be used.
+* ```Organization-Name
+OPTIONAL: If you wish to provide your organization name here, rather than in the Subject of the certificate requests (for example, ACME requests that have no subject), you can use this field.
+
+NOTE: If this field is provided, even if the value is empty, it will override subject-supplied organization values. Therefore, delete this field from your config if not using.
 
  ```json
   "Templates": {
@@ -93,7 +98,8 @@ OPTIONAL: If your DigiCert account has multiple issuing CAs, you can specify whi
       "ProductID": "ssl_plus",
       "Parameters": {
 		"LifetimeDays":"365",
-        "CACertId":"123456789ABCDEF"
+        "CACertId":"123456789ABCDEF",
+		"Organization-Name":"Org Name"
       }
    }
 }
