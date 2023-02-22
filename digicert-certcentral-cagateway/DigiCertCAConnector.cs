@@ -329,8 +329,17 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				Log.LogInformation(errorMessage);
 				throw new COMException(errorMessage, HRESULTs.PROP_NOT_FOUND);
 			}
-			List<StatusOrder> reissueCerts = GetReissues(client, orderId);
-			List<StatusOrder> dupeCerts = GetDuplicates(client, orderId);
+			List<StatusOrder> reissueCerts = new List<StatusOrder>(), dupeCerts = new List<StatusOrder>();
+			try
+			{
+				reissueCerts = GetReissues(client, orderId);
+			}
+			catch { }
+			try
+			{
+				dupeCerts = GetDuplicates(client, orderId);
+			}
+			catch { }
 
 			var orderStatusString = (string.IsNullOrEmpty(orderResponse.certificate.status)) ? orderResponse.status : orderResponse.certificate.status;
 			StatusOrder primary = new StatusOrder
@@ -522,14 +531,28 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 							status = certDetails.status
 						};
 						certsToSync.Add(fullCert);
-						var reissues = GetReissues(digiClient, certDetails.id);
-						if (reissues?.Count > 0)
+						try
 						{
-							certsToSync.AddRange(reissues);
+							var reissues = GetReissues(digiClient, certDetails.id);
+							if (reissues?.Count > 0)
+							{
+								certsToSync.AddRange(reissues);
+							}
+						}
+						catch (Exception exc)
+						{
+							Logger.Error($"Error retrieving reissues for order ID {certDetails.id} for the following reason: {exc.Message}. Continuing with sync, but reissued certificates from this order may be missing.");
 						}
 						if (certDetails.has_duplicates)
 						{
-							certsToSync.AddRange(GetDuplicates(digiClient, certDetails.id));
+							try
+							{
+								certsToSync.AddRange(GetDuplicates(digiClient, certDetails.id));
+							}
+							catch (Exception exc)
+							{
+								Logger.Error($"Error retrieving duplicates for order ID {certDetails.id} for the following reason: {exc.Message}. Continuing with sync, but duplicate certificates from this order may be missing.");
+							}
 						}
 					}
 				}
@@ -551,16 +574,30 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					{
 						cancelToken.ThrowIfCancellationRequested();
 
-						var reissueCerts = GetReissues(digiClient, statusResponse.orders[i].order_id);
-						if (reissueCerts?.Count > 0)
+						try
 						{
-							certsToSync.AddRange(reissueCerts);
+							var reissueCerts = GetReissues(digiClient, statusResponse.orders[i].order_id);
+							if (reissueCerts?.Count > 0)
+							{
+								certsToSync.AddRange(reissueCerts);
+							}
+						}
+						catch (Exception exc)
+						{
+							Logger.Error($"Error retrieving reissues for order ID {statusResponse.orders[i].order_id} for the following reason: {exc.Message}. Continuing with sync, but reissued certificates from this order may be missing.");
 						}
 
-						List<StatusOrder> dupeCerts = GetDuplicates(digiClient, statusResponse.orders[i].order_id);
-						if (dupeCerts?.Count > 0)
+						try
 						{
-							certsToSync.AddRange(dupeCerts);
+							List<StatusOrder> dupeCerts = GetDuplicates(digiClient, statusResponse.orders[i].order_id);
+							if (dupeCerts?.Count > 0)
+							{
+								certsToSync.AddRange(dupeCerts);
+							}
+						}
+						catch (Exception exc)
+						{
+							Logger.Error($"Error retrieving duplicates for order ID {statusResponse.orders[i].order_id} for the following reason: {exc.Message}. Continuing with sync, but duplicate certificates from this order may be missing.");
 						}
 					}
 				}
