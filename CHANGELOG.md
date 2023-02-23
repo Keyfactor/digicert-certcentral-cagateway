@@ -23,5 +23,5 @@ Fixed an issue where renewals were not properly getting tagged with the previous
 Added a config option to allow for revoking a single cert, instead of the entire order
 
 1.3.2  
-Fixed an issue where status of some certs was being returned as Unknown
+Fixed an issue where status of some certs was being returned as Unknown  
 Sync now skips orders that fail retrieving details, rather than failing the entire sync  
