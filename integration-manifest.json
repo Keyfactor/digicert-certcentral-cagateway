@@ -4,5 +4,6 @@
   "name": "DigiCert CertCentral CA AnyGateway",
   "status": "production",
   "link_github": true,
+  "update_catalog": true,
   "description": "This integration allows for the Synchronization, Enrollment, and Revocation of certificates from DigiCert CertCentral."
 }
