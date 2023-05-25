@@ -26,9 +26,21 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 {
 	public class CertCentralCredentials
 	{
-		public CertCentralCredentials()
+		public CertCentralCredentials(string region)
 		{
-			this.EndPoint = "https://www.digicert.com/";
+			switch (region)
+			{
+				case "US":
+					this.EndPoint = "https://www.digicert.com/";
+					break;
+
+				case "EU":
+					this.EndPoint = "https://certcentral.digicert.eu/";
+					break;
+
+				default:
+					throw new Exception("Invalid region specified. Valid regions are US, EU");
+			}
 			this.APIKey = "";
 		}
 
@@ -43,11 +55,11 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 	{
 		private static ILogger Logger => LogHandler.GetClassLogger<CertCentralClient>();
 
-		public CertCentralClient(string authAPIKey)
+		public CertCentralClient(string authAPIKey, string region)
 		{
 			//set in config files
 			//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-			CertCentralCreds = new CertCentralCredentials() { APIKey = authAPIKey };
+			CertCentralCreds = new CertCentralCredentials(region) { APIKey = authAPIKey };
 		}
 
 		private CertCentralCredentials CertCentralCreds { get; set; }
