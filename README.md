@@ -180,7 +180,9 @@ The Certificate Managers section is optional.
 ## CAConnection
 The CA Connection section will determine the API endpoint and configuration data used to connect to DigiCert CA Gateway. 
 * ```APIKey```
-This is the API key to use to connect to the DigiCert API.
+This is the API key to use to connect to the DigiCert API.  
+* ```Region```
+OPTIONAL: Specify the geographic region of your DigiCert account. Valid options are US and EU. If not provided, defaults to US.
 * ```DivisionId```
 OPTIONAL: If your CertCentral account has multiple divisions AND uses any custom per-division product settings, provide a DivisionId for the gateway to use for enrollment calls. Otherwise, omit this configuration field.
 NOTE: The division ID is currently only used for product lookups, this will not impact any other gateway functionality currently.
@@ -190,6 +192,7 @@ OPTIONAL: By default, when you revoke a certificate through DigiCert, it revokes
 ```json
 	"CAConnection": {
 		"APIKey" : "DigiCert API Key",
+		"Region" : "US",
 		"DivisionId": "12345",
 		"RevokeCertificateOnly": false
 	},

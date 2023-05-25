@@ -25,3 +25,6 @@ Added a config option to allow for revoking a single cert, instead of the entire
 1.3.2  
 Fixed an issue where status of some certs was being returned as Unknown  
 Sync now skips orders that fail retrieving details, rather than failing the entire sync  
+
+1.4.0  
+Add configuration to support either US or EU regional account API endpoints
