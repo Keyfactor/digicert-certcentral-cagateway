@@ -60,6 +60,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		{
 			string rawConfig = JsonConvert.SerializeObject(configProvider.CAConnectionData);
 			Config = JsonConvert.DeserializeObject<DigiCertCAConfig>(rawConfig);
+			Config.Region = Config.Region.ToUpper();
 		}
 
 		/// <summary>
@@ -700,7 +701,23 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				errors.Add("The API Key is required.");
 			}
 
-			CertCentralClient digiClient = new CertCentralClient(apiKey);
+			Log.LogTrace("Checking the region.");
+			string region = "US";
+			if (connectionInfo.ContainsKey(DigiCertConstants.Config.REGION))
+			{
+				region = (string)connectionInfo[DigiCertConstants.Config.REGION];
+				List<string> validRegions = new List<string> { "US", "EU" };
+				if (string.IsNullOrWhiteSpace(region) || !validRegions.Contains(region.ToUpper()))
+				{
+					errors.Add($"Region must be one of the following values if provided: {string.Join(",", validRegions)}");
+				}
+			}
+			else
+			{
+				Log.LogTrace("Region not specified, using US default");
+			}
+
+			CertCentralClient digiClient = new CertCentralClient(apiKey, region);
 			ListDomainsResponse domains = digiClient.ListDomains(new ListDomainsRequest());
 			Log.LogDebug("Domain Status: " + domains.Status);
 			if (domains.Status == CertCentralBaseResponse.StatusType.ERROR)
@@ -726,7 +743,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			// Set up.
 			string productId = productInfo.ProductID;
 			string apiKey = (string)connectionInfo[DigiCertConstants.Config.APIKEY];
-			CertCentralClient client = new CertCentralClient(apiKey);
+			string region = "US";
+			if (connectionInfo.ContainsKey(DigiCertConstants.Config.REGION))
+			{
+				region = (string)connectionInfo[DigiCertConstants.Config.REGION];
+			}
+			CertCentralClient client = new CertCentralClient(apiKey, region);
 
 			// Get the available types and check that it's one of them.
 			// We're doing this because to get the list of valid product IDs in a comment, the user must have at least one correct product/template mapping.
@@ -792,7 +814,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			try
 			{
 				string authAPIKey = Config.APIKey;
-				CertCentralClient client = new CertCentralClient(authAPIKey);
+				string region = Config.Region;
+				CertCentralClient client = new CertCentralClient(authAPIKey, region);
 
 				// Get product types.
 				CertificateTypesResponse productTypesResponse = client.GetAllCertificateTypes();
