@@ -618,6 +618,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					}
 					if (order.status.Equals("issued", StringComparison.OrdinalIgnoreCase) || order.status.Equals("revoked", StringComparison.OrdinalIgnoreCase) || order.status.Equals("approved", StringComparison.OrdinalIgnoreCase))
 					{
+						if (Config.SyncCAFilter.Count > 0)
+						{
+							ViewCertificateOrderResponse orderResponse = digiClient.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)order.order_id));
+							if (!Config.SyncCAFilter.Contains(orderResponse.certificate.ca_cert.Id))
+							{
+								continue;
+							}
+						}
 						CAConnectorCertificate certResponse = GetSingleRecord(caRequestId);
 
 						string certificate = certResponse.Certificate;
