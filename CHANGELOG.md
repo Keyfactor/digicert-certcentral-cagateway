@@ -27,4 +27,7 @@ Fixed an issue where status of some certs was being returned as Unknown
 Sync now skips orders that fail retrieving details, rather than failing the entire sync  
 
 1.4.0  
-Add configuration to support either US or EU regional account API endpoints
+Add configuration to support either US or EU regional account API endpoints  
+
+1.5.0  
+Add ability to filter sync by CA ID
