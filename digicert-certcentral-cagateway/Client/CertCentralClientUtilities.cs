@@ -35,7 +35,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			{
 				Logger.LogTrace("Building CertCentralClient with retrieved configuration information");
 				string apiKey = Config.APIKey;
-				return new CertCentralClient(apiKey);
+				string region = Config.Region;
+				return new CertCentralClient(apiKey, region);
 			}
 			catch (Exception ex)
 			{

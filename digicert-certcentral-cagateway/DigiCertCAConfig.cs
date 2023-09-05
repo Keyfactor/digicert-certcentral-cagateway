@@ -10,6 +10,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 	public class DigiCertCAConfig
 	{
 		public string APIKey { get; set; }
+
+		public string Region { get; set; } = "US";
 		public int? DivisionId { get; set; }
 		public bool? RevokeCertificateOnly { get; set; }
 	}
