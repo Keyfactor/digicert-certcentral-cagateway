@@ -510,6 +510,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			List<string> skippedOrders = new List<string>();
 
+			Log.LogTrace($"Sync CAs: {string.Join(",", Config.SyncCAFilter)}");
+			List<string> caList = Config.SyncCAFilter;
+			caList.ForEach(c => c.ToUpper());
 			if (fullSync)
 			{
 				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders();
@@ -621,8 +624,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 						if (Config.SyncCAFilter.Count > 0)
 						{
 							ViewCertificateOrderResponse orderResponse = digiClient.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)order.order_id));
-							if (!Config.SyncCAFilter.Contains(orderResponse.certificate.ca_cert.Id))
+							if (!caList.Contains(orderResponse.certificate.ca_cert.Id.ToUpper()))
 							{
+								Log.LogTrace($"Found certificate that doesn't match SyncCAFilter. CA ID: {orderResponse.certificate.ca_cert.Id} Skipping...");
 								continue;
 							}
 						}
