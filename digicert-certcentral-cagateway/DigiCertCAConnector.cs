@@ -509,9 +509,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 			List<string> skippedOrders = new List<string>();
-
-			Log.LogTrace($"Sync CAs: {string.Join(",", Config.SyncCAFilter)}");
-			List<string> caList = Config.SyncCAFilter;
+			string syncCAstring = string.Join(",", Config.SyncCAFilter ?? new List<string>());
+			Log.LogTrace($"Sync CAs: {syncCAstring}");
+			List<string> caList = Config.SyncCAFilter ?? new List<string>();
 			caList.ForEach(c => c.ToUpper());
 			if (fullSync)
 			{
@@ -607,6 +607,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				}
 			}
 
+			Log.LogDebug($"SYNC DEBUG: Total certs found: {certsToSync?.Count}... Filtering certs to CAs {syncCAstring}");
 			if (certsToSync?.Count > 0)
 			{
 				foreach (StatusOrder order in certsToSync)
