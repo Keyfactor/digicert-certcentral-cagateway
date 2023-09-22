@@ -163,13 +163,17 @@ OPTIONAL: If your CertCentral account has multiple divisions AND uses any custom
 NOTE: The division ID is currently only used for product lookups, this will not impact any other gateway functionality currently.
 * ```RevokeCertificateOnly```
 OPTIONAL: By default, when you revoke a certificate through DigiCert, it revokes it by order number, so orders with multiple certificates all get revoked. If you wish to only revoke single certificates, set this property to true.
+* ```PaymentMethod```
+OPTIONAL: Specify which payment method to use when enrolling for certs.  Valid options are "balance" and "card". Balance uses account balance on your DigiCert account, whereas Card tells DigiCert to use the account's default credit card (which you must set up in your DigiCert account)  
+If this field is not specified, the DigiCert API default will be used, which is "balance"
 
 ```json
 	"CAConnection": {
 		"APIKey" : "DigiCert API Key",
 		"Region" : "US",
 		"DivisionId": "12345",
-		"RevokeCertificateOnly": false
+		"RevokeCertificateOnly": false,
+		"PaymentMethod": "balance"
 	},
 ```
 ## GatewayRegistration

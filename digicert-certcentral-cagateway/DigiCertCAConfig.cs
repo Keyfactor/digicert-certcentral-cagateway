@@ -14,5 +14,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public string Region { get; set; } = "US";
 		public int? DivisionId { get; set; }
 		public bool? RevokeCertificateOnly { get; set; }
+		public string PaymentMethod { get; set; } = null;
 	}
 }

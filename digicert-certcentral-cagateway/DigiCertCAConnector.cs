@@ -254,6 +254,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				orderRequest.ValidityYears = validityYears;
 			}
 
+			// Set the payment type in the request
+			orderRequest.PaymentMethod = string.Equals(Config.PaymentMethod, "card", StringComparison.OrdinalIgnoreCase) ? "profile" : Config.PaymentMethod.ToLower();
+
 			// Check if the order has more validity in it (multi-year cert). If so, do a reissue instead of a renew
 			if (enrollmentType == EnrollmentType.Renew)
 			{
@@ -715,6 +718,22 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			else
 			{
 				Log.LogTrace("Region not specified, using US default");
+			}
+
+			Log.LogTrace("Checking for specified payment method for enrollment.");
+			string payment = null;
+			if (connectionInfo.ContainsKey(DigiCertConstants.Config.PAYMENT_METHOD))
+			{
+				payment = (string)connectionInfo[DigiCertConstants.Config.PAYMENT_METHOD];
+				List<string> validMethods = new List<string> { "BALANCE", "CARD" };
+				if (string.IsNullOrWhiteSpace(payment) || !validMethods.Contains(payment.ToUpper()))
+				{
+					errors.Add($"PaymentMethod must be one of the following values if provided: {string.Join(",", validMethods)}");
+				}
+			}
+			else
+			{
+				Log.LogTrace("Payment method not specified, using API default");
 			}
 
 			CertCentralClient digiClient = new CertCentralClient(apiKey, region);
