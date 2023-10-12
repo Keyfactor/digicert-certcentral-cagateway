@@ -288,7 +288,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			Log.LogTrace("Making request to Enroll");
-
+			orderRequest.SkipApproval = true;
 			switch (enrollmentType)
 			{
 				case EnrollmentType.New:
