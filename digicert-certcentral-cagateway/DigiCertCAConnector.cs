@@ -288,7 +288,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			Log.LogTrace("Making request to Enroll");
-
+			orderRequest.SkipApproval = true;
 			switch (enrollmentType)
 			{
 				case EnrollmentType.New:
@@ -509,7 +509,10 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 			List<string> skippedOrders = new List<string>();
-
+			string syncCAstring = string.Join(",", Config.SyncCAFilter ?? new List<string>());
+			Log.LogTrace($"Sync CAs: {syncCAstring}");
+			List<string> caList = Config.SyncCAFilter ?? new List<string>();
+			caList.ForEach(c => c.ToUpper());
 			if (fullSync)
 			{
 				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders();
@@ -604,6 +607,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				}
 			}
 
+			Log.LogDebug($"SYNC DEBUG: Total certs found: {certsToSync?.Count}... Filtering certs to CAs {syncCAstring}");
 			if (certsToSync?.Count > 0)
 			{
 				foreach (StatusOrder order in certsToSync)
@@ -618,6 +622,15 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					}
 					if (order.status.Equals("issued", StringComparison.OrdinalIgnoreCase) || order.status.Equals("revoked", StringComparison.OrdinalIgnoreCase) || order.status.Equals("approved", StringComparison.OrdinalIgnoreCase))
 					{
+						if (Config.SyncCAFilter.Count > 0)
+						{
+							ViewCertificateOrderResponse orderResponse = digiClient.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)order.order_id));
+							if (!caList.Contains(orderResponse.certificate.ca_cert.Id.ToUpper()))
+							{
+								Log.LogTrace($"Found certificate that doesn't match SyncCAFilter. CA ID: {orderResponse.certificate.ca_cert.Id} Skipping...");
+								continue;
+							}
+						}
 						CAConnectorCertificate certResponse = GetSingleRecord(caRequestId);
 
 						string certificate = certResponse.Certificate;
