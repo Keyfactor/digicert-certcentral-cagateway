@@ -447,10 +447,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			RevokeCertificateResponse revokeResponse;
 			if (Config.RevokeCertificateOnly.HasValue && Config.RevokeCertificateOnly.Value)
 			{
+				Log.LogInformation($"Attempting to revoke certificate with CA Request Id {caRequestID} and serial number {hexSerialNumber}. RevokeCertificateOnly is true, so revoking single certificate.");
 				revokeResponse = client.RevokeCertificate(new RevokeCertificateRequest(certId) { comments = Conversions.RevokeReasonToString(revocationReason) });
 			}
 			else
 			{
+				Log.LogInformation($"Attempting to revoke certificate with CA Request Id {caRequestID} and serial number {hexSerialNumber}. RevokeCertificateOnly is false, so revoking the entire order.");
 				revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
 			}
 
