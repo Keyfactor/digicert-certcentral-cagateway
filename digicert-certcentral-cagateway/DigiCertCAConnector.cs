@@ -370,7 +370,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				CertificateChainResponse certificateChainResponse = client.GetCertificateChain(new CertificateChainRequest(certId));
 				if (certificateChainResponse.Status == CertCentralBaseResponse.StatusType.SUCCESS)
 				{
-					certificate = certificateChainResponse.Intermediates[0].PEM;
+					if (certificateChainResponse.Intermediates.Count > 0)
+					{
+						certificate = certificateChainResponse.Intermediates[0].PEM;
+					}
+					else
+					{
+						throw new Exception($"No PEM certificate returned for certificate {certId} in order {orderId}. This could be due to a certificate that provisioned via an alternative method, such as a physical token.");
+					}
 				}
 				else
 				{
@@ -633,12 +640,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 								continue;
 							}
 						}
-						CAConnectorCertificate certResponse = GetSingleRecord(caRequestId);
+						CAConnectorCertificate certResponse = null;
 
-						string certificate = certResponse.Certificate;
+						string certificate;
 						string noHeaders;
 						try
 						{
+							certResponse = GetSingleRecord(caRequestId);
+							certificate = certResponse.Certificate;
 							noHeaders = ConfigurationUtils.OnlyBase64CertContent(certificate);
 						}
 						catch (Exception)
