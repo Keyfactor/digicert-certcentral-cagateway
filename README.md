@@ -194,13 +194,19 @@ OPTIONAL: If your CertCentral account has multiple divisions AND uses any custom
 NOTE: The division ID is currently only used for product lookups, this will not impact any other gateway functionality currently.
 * ```RevokeCertificateOnly```
 OPTIONAL: By default, when you revoke a certificate through DigiCert, it revokes it by order number, so orders with multiple certificates all get revoked. If you wish to only revoke single certificates, set this property to true.
+* ```SyncCAFilter```
+OPTIONAL: If you list one or more CA IDs here, the sync process will only sync records from those CAs. If you want to sync all CA IDs, do not include this config option.
+* ```IgnoreExpiredOrders```
+OPTIONAL: If set to 'true', syncing will apply a filter to only return orders whose expiration date is later than the current day. Default if not specified is 'false'
 
 ```json
 	"CAConnection": {
 		"APIKey" : "DigiCert API Key",
 		"Region" : "US",
 		"DivisionId": "12345",
-		"RevokeCertificateOnly": false
+		"RevokeCertificateOnly": false,
+		"SyncCAFilter": ["ABC12345", "DEF67890"],
+		"IgnoreExpiredorders": false
 	},
 ```
 ## GatewayRegistration
