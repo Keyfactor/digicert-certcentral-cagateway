@@ -42,7 +42,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 
 			if (ignoreExpired)
 			{
-				sbParamters.Append("&filters[valid_till]=>").Append(DateTime.Today.ToString("yyyy-MM-dd");
+				sbParamters.Append("&filters[valid_till]=>").Append(DateTime.Today.ToString("yyyy-MM-dd"));
 			}
 
 			return sbParamters.ToString();
