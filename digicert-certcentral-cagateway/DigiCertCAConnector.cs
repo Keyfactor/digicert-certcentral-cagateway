@@ -524,7 +524,13 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			caList.ForEach(c => c.ToUpper());
 			if (fullSync)
 			{
-				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders();
+				bool ignoreExpired = false;
+				if (Config.IgnoreExpiredOrders.HasValue && Config.IgnoreExpiredOrders.Value)
+				{
+					ignoreExpired = true;
+				}
+
+				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders(ignoreExpired);
 				if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
 					Error error = orderResponse.Errors[0];
