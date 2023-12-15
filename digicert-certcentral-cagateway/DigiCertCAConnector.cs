@@ -288,7 +288,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			Log.LogTrace("Making request to Enroll");
-
+			orderRequest.SkipApproval = true;
 			switch (enrollmentType)
 			{
 				case EnrollmentType.New:
@@ -370,7 +370,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				CertificateChainResponse certificateChainResponse = client.GetCertificateChain(new CertificateChainRequest(certId));
 				if (certificateChainResponse.Status == CertCentralBaseResponse.StatusType.SUCCESS)
 				{
-					certificate = certificateChainResponse.Intermediates[0].PEM;
+					if (certificateChainResponse.Intermediates.Count > 0)
+					{
+						certificate = certificateChainResponse.Intermediates[0].PEM;
+					}
+					else
+					{
+						throw new Exception($"No PEM certificate returned for certificate {certId} in order {orderId}. This could be due to a certificate that provisioned via an alternative method, such as a physical token.");
+					}
 				}
 				else
 				{
@@ -447,10 +454,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			RevokeCertificateResponse revokeResponse;
 			if (Config.RevokeCertificateOnly.HasValue && Config.RevokeCertificateOnly.Value)
 			{
+				Log.LogInformation($"Attempting to revoke certificate with CA Request Id {caRequestID} and serial number {hexSerialNumber}. RevokeCertificateOnly is true, so revoking single certificate.");
 				revokeResponse = client.RevokeCertificate(new RevokeCertificateRequest(certId) { comments = Conversions.RevokeReasonToString(revocationReason) });
 			}
 			else
 			{
+				Log.LogInformation($"Attempting to revoke certificate with CA Request Id {caRequestID} and serial number {hexSerialNumber}. RevokeCertificateOnly is false, so revoking the entire order.");
 				revokeResponse = client.RevokeCertificate(new RevokeCertificateByOrderRequest(orderResponse.id) { comments = Conversions.RevokeReasonToString(revocationReason) });
 			}
 
@@ -509,10 +518,23 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			CertCentralClient digiClient = CertCentralClientUtilities.BuildCertCentralClient(Config);
 
 			List<string> skippedOrders = new List<string>();
-
+			string syncCAstring = string.Join(",", Config.SyncCAFilter ?? new List<string>());
+			Log.LogTrace($"Sync CAs: {syncCAstring}");
+			List<string> caList = Config.SyncCAFilter ?? new List<string>();
+			caList.ForEach(c => c.ToUpper());
 			if (fullSync)
 			{
-				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders();
+				bool ignoreExpired = false; int expiredWindow = 0;
+				if (Config.FilterExpiredOrders.HasValue && Config.FilterExpiredOrders.Value)
+				{
+					ignoreExpired = true;
+					if (Config.SyncExpirationDays.HasValue)
+					{
+						expiredWindow = Config.SyncExpirationDays.Value;
+					}
+				}
+
+				ListCertificateOrdersResponse orderResponse = digiClient.ListAllCertificateOrders(ignoreExpired, expiredWindow);
 				if (orderResponse.Status == CertCentralBaseResponse.StatusType.ERROR)
 				{
 					Error error = orderResponse.Errors[0];
@@ -604,6 +626,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 				}
 			}
 
+			Log.LogDebug($"SYNC DEBUG: Total certs found: {certsToSync?.Count}... Filtering certs to CAs {syncCAstring}");
 			if (certsToSync?.Count > 0)
 			{
 				foreach (StatusOrder order in certsToSync)
@@ -618,12 +641,23 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					}
 					if (order.status.Equals("issued", StringComparison.OrdinalIgnoreCase) || order.status.Equals("revoked", StringComparison.OrdinalIgnoreCase) || order.status.Equals("approved", StringComparison.OrdinalIgnoreCase))
 					{
-						CAConnectorCertificate certResponse = GetSingleRecord(caRequestId);
+						if (Config.SyncCAFilter.Count > 0)
+						{
+							ViewCertificateOrderResponse orderResponse = digiClient.ViewCertificateOrder(new ViewCertificateOrderRequest((uint)order.order_id));
+							if (!caList.Contains(orderResponse.certificate.ca_cert.Id.ToUpper()))
+							{
+								Log.LogTrace($"Found certificate that doesn't match SyncCAFilter. CA ID: {orderResponse.certificate.ca_cert.Id} Skipping...");
+								continue;
+							}
+						}
+						CAConnectorCertificate certResponse = null;
 
-						string certificate = certResponse.Certificate;
+						string certificate;
 						string noHeaders;
 						try
 						{
+							certResponse = GetSingleRecord(caRequestId);
+							certificate = certResponse.Certificate;
 							noHeaders = ConfigurationUtils.OnlyBase64CertContent(certificate);
 						}
 						catch (Exception)
