@@ -32,6 +32,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		public int offset { get; set; }
 
 		public bool ignoreExpired { get; set; }
+		public int expiredWindow { get; set; } = 0;
 
 		public new string BuildParameters()
 		{
@@ -42,7 +43,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 
 			if (ignoreExpired)
 			{
-				sbParamters.Append("&filters[valid_till]=>").Append(DateTime.Today.ToString("yyyy-MM-dd"));
+				DateTime cutoffDate = DateTime.Today.AddDays(-1 - expiredWindow);
+				sbParamters.Append("&filters[valid_till]=>").Append(cutoffDate.ToString("yyyy-MM-dd"));
 			}
 
 			return sbParamters.ToString();

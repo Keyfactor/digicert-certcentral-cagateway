@@ -491,7 +491,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 			return dlCertificateRequestResponse;
 		}
 
-		public ListCertificateOrdersResponse ListAllCertificateOrders(bool ignoreExpired = false)
+		public ListCertificateOrdersResponse ListAllCertificateOrders(bool ignoreExpired = false, int expiredWindow = 0)
 		{
 			int batch = 1000;
 			ListCertificateOrdersResponse totalResponse = new ListCertificateOrdersResponse();
@@ -502,7 +502,8 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.Client
 				{
 					limit = batch,
 					offset = totalResponse.orders.Count,
-					ignoreExpired = ignoreExpired
+					ignoreExpired = ignoreExpired,
+					expiredWindow = expiredWindow
 				};
 
 				CertCentralResponse response = Request(request, request.BuildParameters());

@@ -22,6 +22,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public int? DivisionId { get; set; }
 		public bool? RevokeCertificateOnly { get; set; }
 		public List<string> SyncCAFilter { get; set; }
-		public bool? IgnoreExpiredOrders { get; set; }
+		public bool? FilterExpiredOrders { get; set; }
+		public int? SyncExpirationDays { get; set; }
 	}
 }
