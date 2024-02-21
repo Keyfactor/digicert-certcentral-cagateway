@@ -5,5 +5,7 @@
   "status": "production",
   "link_github": true,
   "update_catalog": true,
+  "release_dir": "digicert-certcentral-cagateway/bin/Release",
+  "support_level": "kf-supported",
   "description": "This integration allows for the Synchronization, Enrollment, and Revocation of certificates from DigiCert CertCentral."
 }

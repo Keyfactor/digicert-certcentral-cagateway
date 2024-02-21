@@ -92,6 +92,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("custom_fields")]
 		public List<MetadataField> CustomFields { get; set; }
 
+		[JsonProperty("skip_approval")]
+		public bool SkipApproval { get; set; }
+
 		[JsonProperty("payment_method")]
 		public string PaymentMethod { get; set; }
 

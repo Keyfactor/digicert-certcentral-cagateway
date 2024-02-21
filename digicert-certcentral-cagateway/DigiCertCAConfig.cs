@@ -5,15 +5,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Keyfactor.Extensions.AnyGateway.DigiCert
 {
 	public class DigiCertCAConfig
 	{
+		public DigiCertCAConfig()
+		{
+			SyncCAFilter = new List<string>();
+		}
+
 		public string APIKey { get; set; }
 
 		public string Region { get; set; } = "US";
 		public int? DivisionId { get; set; }
 		public bool? RevokeCertificateOnly { get; set; }
+		public List<string> SyncCAFilter { get; set; }
+		public bool? FilterExpiredOrders { get; set; }
+		public int? SyncExpirationDays { get; set; }
 		public string PaymentMethod { get; set; } = null;
 	}
 }
