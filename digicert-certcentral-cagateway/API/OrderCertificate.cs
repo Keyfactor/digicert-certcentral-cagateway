@@ -95,6 +95,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("skip_approval")]
 		public bool SkipApproval { get; set; }
 
+		[JsonProperty("payment_method")]
+		public string PaymentMethod { get; set; }
+
 		public void SetOrganization(int? organizationId)
 		{
 			if (organizationId.HasValue)

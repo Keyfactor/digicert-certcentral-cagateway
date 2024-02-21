@@ -206,6 +206,9 @@ OPTIONAL: If you list one or more CA IDs here, the sync process will only sync r
 OPTIONAL: If set to 'true', syncing will apply a filter to only return orders whose expiration date is later than the current day. Default if not specified is 'false'
 * ```SyncExpirationDays```
 OPTIONAL: If FilterExpiredOrders is set to true and SyncExpirationDays is provided, it specifies the number of days in the past to sync expired certs. Example: a value of 30 means all certs that expired within the past 30 days will still be sync. If FilterExpiredOrders is true and this is not provided, the default will filter out certs that expired before the current day. This value is ignored if FilterExpiredOrders is false or not provided.
+* ```PaymentMethod```
+OPTIONAL: Specify which payment method to use when enrolling for certs.  Valid options are "balance" and "card". Balance uses account balance on your DigiCert account, whereas Card tells DigiCert to use the account's default credit card (which you must set up in your DigiCert account)  
+If this field is not specified, the DigiCert API default will be used, which is "balance"
 
 ```json
 	"CAConnection": {
@@ -216,6 +219,7 @@ OPTIONAL: If FilterExpiredOrders is set to true and SyncExpirationDays is provid
 		"SyncCAFilter": ["ABC12345", "DEF67890"],
 		"FilterExpiredorders": false,
 		"SyncExpirationDays": 30
+		"PaymentMethod": "balance"
 	},
 ```
 ## GatewayRegistration

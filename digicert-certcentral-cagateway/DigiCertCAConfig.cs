@@ -24,5 +24,6 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public List<string> SyncCAFilter { get; set; }
 		public bool? FilterExpiredOrders { get; set; }
 		public int? SyncExpirationDays { get; set; }
+		public string PaymentMethod { get; set; } = null;
 	}
 }
