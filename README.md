@@ -23,7 +23,6 @@ DigiCert CertCentral CA AnyGateway is supported by Keyfactor for Keyfactor custo
 
 
 
-
 ## Keyfactor AnyGateway Framework Supported
 
 This gateway was compiled against version  of the AnyGateway Framework.  You will need at least this version of the AnyGateway Framework Installed.  If you have a later AnyGateway Framework Installed you will probably need to add binding redirects in the CAProxyServer.exe.config file to make things work properly.
@@ -112,6 +111,8 @@ If the LifetimeDays value is evenly divisible by 365, when a certificate is rene
 OPTIONAL: If your DigiCert account has multiple issuing CAs, you can specify which one to use by supplying its ID here. If not provided, no CA ID will be passed in to the DigiCert API, and the default for your account will be used.
 * ```Organization-Name
 OPTIONAL: If you wish to provide your organization name here, rather than in the Subject of the certificate requests (for example, ACME requests that have no subject), you can use this field.
+* ```CertType
+OPTIONAL: Allows you to specify whether the certs of this template are ssl or client certs. Valid values: ssl, client. If not provided, defaults to ssl.
 
 NOTE: If this field is provided, even if the value is empty, it will override subject-supplied organization values. Therefore, delete this field from your config if not using.
 
@@ -122,7 +123,8 @@ NOTE: If this field is provided, even if the value is empty, it will override su
       "Parameters": {
 		"LifetimeDays":"365",
         "CACertId":"123456789ABCDEF",
-		"Organization-Name":"Org Name"
+		"Organization-Name":"Org Name",
+		"CertType":"ssl"
       }
    }
 }
@@ -240,4 +242,5 @@ There are no specific Changes for the ServiceSettings section. Refer to the AnyG
 		"PartialScanPeriodMinutes": 240 
 	}
 ```
+
 
