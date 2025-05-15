@@ -93,8 +93,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public override EnrollmentResult Enroll(ICertificateDataReader certificateDataReader, string csr, string subject, Dictionary<string, string[]> san, EnrollmentProductInfo productInfo, CSS.PKI.PKIConstants.X509.RequestFormat requestFormat, EnrollmentType enrollmentType)
 		{
 			Log.MethodEntry(LogLevel.Trace);
+
+			string sans = string.Join(";", san.Select(s => string.Format("{0}:{1}", s.Key, string.Join(",", s.Value))));
 			string paramsList = string.Join(";", productInfo.ProductParameters.Select(x => string.Format("{0}={1}", x.Key, x.Value)));
-			Log.LogTrace($"Attempting to enroll for certificate with:\nSubject: {subject}\nParams: {paramsList}\nCSR: {csr}");
+			Log.LogTrace($"Attempting to enroll for certificate with:\nSubject: {subject}\nSANs: {sans}\nParams: {paramsList}\nCSR: {csr}");
+			
+			
 			OrderResponse orderResponse = new OrderResponse();
 			CertCentralCertType certType = (CertCentralCertType)CertCentralCertType.GetAllTypes(Config).FirstOrDefault(x => x.ProductCode.Equals(productInfo.ProductID));
 			OrderRequest orderRequest = new OrderRequest(certType);
