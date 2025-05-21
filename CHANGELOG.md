@@ -31,3 +31,6 @@ Add configuration to support either US or EU regional account API endpoints
 
 1.5.0  
 Add ability to filter sync by CA ID
+
+1.6.0
+Add support for client cert enrollment
