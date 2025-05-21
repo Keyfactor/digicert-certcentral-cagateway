@@ -5,9 +5,9 @@ This integration allows for the Synchronization, Enrollment, and Revocation of c
 
 #### Integration status: Production - Ready for use in production environments.
 
-## About the Keyfactor AnyGateway CA Connector
+## About the Keyfactor AnyCA Gateway DCOM Connector
 
-This repository contains an AnyGateway CA Connector, which is a plugin to the Keyfactor AnyGateway. AnyGateway CA Connectors allow Keyfactor Command to be used for inventory, issuance, and revocation of certificates from a third-party certificate authority.
+This repository contains an AnyCA Gateway Connector, which is a plugin to the Keyfactor AnyGateway. AnyCA Gateway Connectors allow Keyfactor Command to be used for inventory, issuance, and revocation of certificates from a third-party certificate authority.
 
 ## Support for DigiCert CertCentral CA AnyGateway
 
@@ -24,9 +24,14 @@ DigiCert CertCentral CA AnyGateway is supported by Keyfactor for Keyfactor custo
 
 
 
-## Keyfactor AnyGateway Framework Supported
+## Keyfactor AnyCA Gateway Framework Supported
+The Keyfactor gateway framework implements common logic shared across various gateway implementations and handles communication with Keyfactor Command. The gateway framework hosts gateway implementations or plugins that understand how to communicate with specific CAs. This allows you to integrate your third-party CAs with Keyfactor Command such that they behave in a manner similar to the CAs natively supported by Keyfactor Command.
 
-This gateway was compiled against version  of the AnyGateway Framework.  You will need at least this version of the AnyGateway Framework Installed.  If you have a later AnyGateway Framework Installed you will probably need to add binding redirects in the CAProxyServer.exe.config file to make things work properly.
+
+
+
+This gateway extension was compiled against version  of the AnyCA Gateway DCOM Framework.  You will need at least this version of the framework Installed. If you have a later AnyGateway Framework Installed you will probably need to add binding redirects in the CAProxyServer.exe.config file to make things work properly.
+
 
 [Keyfactor CAGateway Install Guide](https://software.keyfactor.com/Guides/AnyGateway_Generic/Content/AnyGateway/Introduction.htm)
 
@@ -240,4 +245,5 @@ There are no specific Changes for the ServiceSettings section. Refer to the AnyG
 		"PartialScanPeriodMinutes": 240 
 	}
 ```
+
 
