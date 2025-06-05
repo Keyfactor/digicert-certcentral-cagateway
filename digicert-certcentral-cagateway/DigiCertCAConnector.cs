@@ -5,6 +5,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
+extern alias BC;
+
 using CAProxy.AnyGateway;
 using CAProxy.AnyGateway.Interfaces;
 using CAProxy.AnyGateway.Models;
@@ -121,16 +123,19 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			// Parse subject
-			X509Name subjectParsed = null;
+			BC.Org.BouncyCastle.Asn1.X509.X509Name subjectParsed = null;
 			string commonName = null, organization = null, orgUnit = null;
 			try
 			{
-				subjectParsed = new X509Name(subject);
-				commonName = subjectParsed.GetValueList(X509Name.CN).Cast<string>().LastOrDefault();
-				organization = subjectParsed.GetValueList(X509Name.O).Cast<string>().LastOrDefault();
-				orgUnit = subjectParsed.GetValueList(X509Name.OU).Cast<string>().LastOrDefault();
+				subjectParsed = new BC.Org.BouncyCastle.Asn1.X509.X509Name(true, Keyfactor.PKI.PKIConstants.X509.OIDLookup, subject);
+				commonName = subjectParsed.GetValueList(BC.Org.BouncyCastle.Asn1.X509.X509Name.CN).Cast<string>().LastOrDefault();
+				organization = subjectParsed.GetValueList(BC.Org.BouncyCastle.Asn1.X509.X509Name.O).Cast<string>().LastOrDefault();
+				orgUnit = subjectParsed.GetValueList(BC.Org.BouncyCastle.Asn1.X509.X509Name.OU).Cast<string>().LastOrDefault();
 			}
-			catch (Exception) { }
+			catch (Exception exc)
+			{
+				Log.LogInformation($"Error while parsing subject. This might be expected. Error message: {exc.Message}");
+			}
 
 			if (commonName == null)
 			{
