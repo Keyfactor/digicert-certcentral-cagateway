@@ -30,4 +30,7 @@ Sync now skips orders that fail retrieving details, rather than failing the enti
 Add configuration to support either US or EU regional account API endpoints  
 
 1.5.0  
-Add ability to filter sync by CA ID
+Add ability to filter sync by CA ID  
+
+1.5.1
+Hotfix for BouncyCastle parsing
