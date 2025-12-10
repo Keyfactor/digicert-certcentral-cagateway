@@ -73,10 +73,7 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		/// <returns></returns>
 		public static List<CABaseCertType> GetAllTypes(DigiCertCAConfig proxyConfig)
 		{
-			if (_allTypes == null || !_allTypes.Any())
-			{
-				_allTypes = RetrieveCertCentralCertTypes(proxyConfig);
-			}
+			_allTypes = RetrieveCertCentralCertTypes(proxyConfig);
 
 			return _allTypes.Cast<CABaseCertType>().ToList();
 		}

@@ -93,9 +93,22 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 		public override EnrollmentResult Enroll(ICertificateDataReader certificateDataReader, string csr, string subject, Dictionary<string, string[]> san, EnrollmentProductInfo productInfo, CSS.PKI.PKIConstants.X509.RequestFormat requestFormat, EnrollmentType enrollmentType)
 		{
 			Log.MethodEntry(LogLevel.Trace);
+
+			string sans = string.Join(";", san.Select(s => string.Format("{0}:{1}", s.Key, string.Join(",", s.Value))));
+			string paramsList = string.Join(";", productInfo.ProductParameters.Select(x => string.Format("{0}={1}", x.Key, x.Value)));
+			Log.LogTrace($"Attempting to enroll for certificate with:\nSubject: {subject}\nSANs: {sans}\nParams: {paramsList}\nCSR: {csr}");
+			
+			
 			OrderResponse orderResponse = new OrderResponse();
 			CertCentralCertType certType = (CertCentralCertType)CertCentralCertType.GetAllTypes(Config).FirstOrDefault(x => x.ProductCode.Equals(productInfo.ProductID));
 			OrderRequest orderRequest = new OrderRequest(certType);
+
+			string typeOfCert = (productInfo.ProductParameters.ContainsKey(DigiCertConstants.Config.CERT_TYPE)) ? productInfo.ProductParameters[DigiCertConstants.Config.CERT_TYPE].ToLower() : "ssl";
+
+			if (!(typeOfCert.Equals("ssl") || typeOfCert.Equals("client")))
+			{
+				throw new Exception("Invalid Cert Type specified. Valid options are 'ssl' or 'client'");
+			}
 
 			var days = (productInfo.ProductParameters.ContainsKey("LifetimeDays")) ? int.Parse(productInfo.ProductParameters["LifetimeDays"]) : 365;
 			// Determining if this is a yearly validity or a specific date
@@ -115,9 +128,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			}
 
 			List<string> dnsNames = new List<string>();
+			List<string> emails = new List<string>();
 			if (san.ContainsKey("Dns"))
 			{
 				dnsNames = new List<string>(san["Dns"]);
+			}
+			if (san.ContainsKey("Email"))
+			{
+				emails = new List<string>(san["Email"]);
 			}
 
 			// Parse subject
@@ -134,13 +152,24 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 
 			if (commonName == null)
 			{
-				if (dnsNames.Count > 0)
+				if (typeOfCert.Equals("ssl") && dnsNames.Count > 0)
 				{
 					commonName = dnsNames[0];
 				}
+				else if (typeOfCert.Equals("client") && emails.Count > 0)
+				{
+					commonName = emails[0];
+				}
 				else
 				{
-					throw new Exception("No Common Name or DNS SAN provided, unable to enroll");
+					throw new Exception("No Common Name or SAN provided, unable to enroll");
+				}
+			}
+			else
+			{
+				if (typeOfCert.Equals("client") && emails.Count == 0)
+				{
+					emails.Add(commonName);
 				}
 			}
 
@@ -204,7 +233,14 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 			orderRequest.Certificate.CommonName = commonName;
 			orderRequest.Certificate.CSR = csr;
 			orderRequest.Certificate.SignatureHash = signatureHash;
-			orderRequest.Certificate.DNSNames = dnsNames;
+			if (typeOfCert.Equals("ssl"))
+			{
+				orderRequest.Certificate.DNSNames = dnsNames;
+			}
+			else if (typeOfCert.Equals("client"))
+			{
+				orderRequest.Certificate.Emails = emails;
+			}
 			orderRequest.Certificate.CACertID = cacertid;
 			orderRequest.SetOrganization(organizationId);
 			if (!string.IsNullOrEmpty(orgUnit))
@@ -912,6 +948,12 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert
 					Comments = "OPTIONAL: ID of issuing CA to use by DigiCert. If not provided, the default for your account will be used.",
 					Hidden = false,
 					DefaultValue = ""
+				},
+				[DigiCertConstants.Config.CERT_TYPE] = new PropertyConfigInfo()
+				{
+					Comments = "OPTIONAL: Type of cert to request. Valid values: ssl, client. If not specified, defaults to 'ssl'.",
+					Hidden = false,
+					DefaultValue = "ssl"
 				}
 			};
 		}

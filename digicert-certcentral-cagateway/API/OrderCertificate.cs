@@ -31,6 +31,9 @@ namespace Keyfactor.Extensions.AnyGateway.DigiCert.API
 		[JsonProperty("dns_names")]
 		public List<string> DNSNames { get; set; }
 
+		[JsonProperty("emails")]
+		public List<string> Emails { get; set; }
+
 		[JsonProperty("csr")]
 		public string CSR { get; set; }
 
